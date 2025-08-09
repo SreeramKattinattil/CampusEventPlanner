@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Register</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <div class="bg-white shadow-md rounded-lg p-8 w-full max-w-xl">
+    <h2 class="text-2xl font-bold mb-6 text-center">Student Registration</h2>
+    <form action="/register" method="POST" class="grid grid-cols-2 gap-4">
+      <input type="text" name="name" placeholder="Name" required class="p-3 border rounded col-span-2" />
+      <input type="email" name="email" placeholder="Email" required class="p-3 border rounded col-span-2" />
+      <input type="password" name="password" placeholder="Password" required class="p-3 border rounded" />
+      <input type="password" name="confirmPassword" placeholder="Confirm Password" required class="p-3 border rounded" />
+
+      <div class="col-span-2">
+        <label class="block mb-1">Are you from this college?</label>
+        <select name="isCollegeStudent" id="isCollegeStudent" required class="w-full p-3 border rounded">
+          <option value="">-- Select --</option>
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select>
+      </div>
+
+      <div class="col-span-2" id="collegeField" style="display: none;">
+        <input type="text" name="college" placeholder="If not, enter college name"
+          class="w-full p-3 border rounded" />
+      </div>
+
+      <div class="col-span-1">
+        <label class="block mb-1">Department</label>
+        <select name="department" required class="w-full p-3 border rounded">
+          <option value="">Select Dept</option>
+          <option value="MCA">MCA</option>
+          <option value="MBA">MBA</option>
+          <option value="iMCA">iMCA</option>
+          <option value="Btech.NASB">Btech.NASB</option>
+          <option value="Btech.EEE">Btech.EEE</option>
+          <option value="Btech.CE">Btech.CE</option>
+          <option value="Btech.ME">Btech.ME</option>
+          <option value="Btech.CSE">Btech.CSE</option>
+          <option value="Btech.ECE">Btech.ECE</option>
+        </select>
+      </div>
+
+      <div class="col-span-1">
+        <label class="block mb-1">Semester</label>
+        <select name="semester" required class="w-full p-3 border rounded">
+          <option value="">S1 - S10</option>
+          <option value="S1">S1</option>
+          <option value="S2">S2</option>
+          <option value="S3">S3</option>
+          <option value="S4">S4</option>
+          <option value="S5">S5</option>
+          <option value="S6">S6</option>
+          <option value="S7">S7</option>
+          <option value="S8">S8</option>
+          <option value="S9">S9</option>
+          <option value="S10">S10</option>
+        </select>
+      </div>
+
+      <button type="submit"
+        class="col-span-2 bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Register</button>
+    </form>
+    <p class="mt-4 text-sm text-center">
+      Already registered? <a href="/login" class="text-blue-600 underline">Login here</a>
+    </p>
+  </div>
+
+  <!-- JavaScript to toggle visibility -->
+  <script>
+    const selectBox = document.getElementById('isCollegeStudent');
+    const collegeField = document.getElementById('collegeField');
+
+    selectBox.addEventListener('change', function () {
+      if (this.value === 'no') {
+        collegeField.style.display = 'block';
+      } else {
+        collegeField.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>

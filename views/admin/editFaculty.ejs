@@ -1,0 +1,29 @@
+<%- include("../partials/adminHeader") %>
+<div class="max-w-xl mx-auto mt-10 bg-white p-8 rounded-xl shadow">
+  <h2 class="text-2xl font-bold mb-6 text-gray-800">Edit Faculty</h2>
+
+  <form action="/admin/edit-faculty/<%= faculty._id %>" method="POST" class="space-y-4">
+    <div>
+      <label class="block mb-1 text-gray-600 font-medium">Name</label>
+      <input type="text" name="name" value="<%= faculty.name %>" required
+        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" />
+    </div>
+
+    <div>
+      <label class="block mb-1 text-gray-600 font-medium">Email</label>
+      <input type="email" name="email" value="<%= faculty.email %>" required
+        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" />
+    </div>
+
+    <div>
+      <label class="block mb-1 text-gray-600 font-medium">Department</label>
+      <input type="text" name="department" value="<%= faculty.department %>" required
+        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" />
+    </div>
+
+    <button type="submit"
+      class="bg-teal-600 hover:bg-teal-700 text-white px-6 py-2 rounded-lg shadow">
+      Update Faculty
+    </button>
+  </form>
+</div>
