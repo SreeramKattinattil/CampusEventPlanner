@@ -1,0 +1,25 @@
+<div class="bg-white shadow rounded p-6">
+  <h2 class="text-xl font-bold mb-4">Event Coordinators</h2>
+  <% if (coordinators.length === 0) { %>
+    <p class="text-gray-600">No event coordinators found.</p>
+  <% } else { %>
+    <table class="w-full border">
+      <thead>
+        <tr class="bg-gray-100">
+          <th class="p-2 border">Name</th>
+          <th class="p-2 border">Email</th>
+          <th class="p-2 border">Department</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% coordinators.forEach(coordinator => { %>
+          <tr>
+            <td class="p-2 border"><%= coordinator.name %></td>
+            <td class="p-2 border"><%= coordinator.email %></td>
+            <td class="p-2 border"><%= coordinator.department %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</div>

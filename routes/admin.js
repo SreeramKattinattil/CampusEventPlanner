@@ -79,15 +79,7 @@ router.get("/faculty", isAdmin, async (req, res) => {
 });
 
 // POST /admin/faculty/delete/:id
-router.post("/faculty/delete/:id", isAdmin, async (req, res) => {
-  try {
-    await Faculty.findByIdAndDelete(req.params.id);
-    res.redirect("/admin/faculty");
-  } catch (err) {
-    console.error("Delete error:", err);
-    res.send("Error deleting faculty.");
-  }
-});
+
 router.post("/delete-faculty/:id", isAdmin, async (req, res) => {
   try {
     await Faculty.findByIdAndDelete(req.params.id);

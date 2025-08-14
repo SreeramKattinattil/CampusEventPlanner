@@ -1,0 +1,91 @@
+<%- include("../partials/facultyHeader") %>
+
+<main class="ml-60 p-8 bg-gradient-to-br from-gray-100 to-gray-200 min-h-screen">
+  <div class="max-w-4xl mx-auto">
+    <!-- Card -->
+    <div class="backdrop-blur-lg bg-white/80 rounded-2xl shadow-2xl border border-white/50 p-8 animate-fadeIn">
+      <!-- Title -->
+      <h2 class="text-3xl font-extrabold text-gray-800 mb-6">Add Event Coordinator</h2>
+      <p class="text-gray-500 mb-8">Fill out the details below to add a new coordinator for your events.</p>
+
+      <!-- Form -->
+      <form action="/faculty/add-event-coordinator" method="POST" class="grid md:grid-cols-2 gap-6">
+        
+        <!-- Full Name -->
+        <div class="relative">
+          <input type="text" id="name" name="name" required
+                 class="peer w-full border border-gray-300 rounded-lg bg-transparent px-4 pt-5 pb-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+          <label for="name"
+                 class="absolute left-4 top-2.5 text-gray-500 text-sm transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:text-base">
+            Full Name
+          </label>
+        </div>
+
+        <!-- Email -->
+        <div class="relative">
+          <input type="email" id="email" name="email" required
+                 class="peer w-full border border-gray-300 rounded-lg bg-transparent px-4 pt-5 pb-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+          <label for="email"
+                 class="absolute left-4 top-2.5 text-gray-500 text-sm transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:text-base">
+            Email Address
+          </label>
+        </div>
+
+        <!-- Department -->
+      <!-- Department -->
+<div>
+  <label for="department" class="block text-sm font-semibold text-gray-600 mb-2">Department</label>
+  <div class="relative">
+    <select id="department" name="department" required
+            class="appearance-none w-full border border-gray-300 rounded-lg bg-white px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+      <option value="" disabled selected>Select Department</option>
+      <option value="MCA">MCA</option>
+      <option value="MBA">MBA</option>
+      <option value="iMCA">iMCA</option>
+      <option value="Btech.CSE">Btech.CSE</option>
+      <option value="Btech.ECE">Btech.ECE</option>
+      <option value="Btech.ME">Btech.ME</option>
+      <option value="Btech.CE">Btech.CE</option>
+      <option value="Btech.EEE">Btech.EEE</option>
+      <option value="Btech.NASB">Btech.NASB</option>
+    </select>
+
+    <!-- Custom dropdown arrow -->
+    <svg class="w-5 h-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none"
+         xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+    </svg>
+  </div>
+</div>
+
+
+        <!-- Password -->
+        <div class="relative">
+          <input type="password" id="password" name="password" required
+                 class="peer w-full border border-gray-300 rounded-lg bg-transparent px-4 pt-5 pb-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+          <label for="password"
+                 class="absolute left-4 top-2.5 text-gray-500 text-sm transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:text-base">
+            Password
+          </label>
+        </div>
+
+        <!-- Submit (Full Width) -->
+        <div class="md:col-span-2 pt-4">
+          <button type="submit"
+                  class="w-full py-3 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold shadow-lg transform hover:scale-[1.02] transition">
+            ➕ Add Coordinator
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+
+<!-- Animation -->
+<style>
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn { animation: fadeIn 0.4s ease-out; }
+</style>

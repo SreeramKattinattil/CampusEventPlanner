@@ -4,14 +4,17 @@ const router = express.Router();
 
 const User = require("../models/user");
 const Admin = require("../models/admin");
-const Faculty = require("../models/faculty"); // separate faculty model
+const Faculty = require("../models/faculty");
+const EventCoordinator = require("../models/eventCoordinator");
+
+// -------------------- LOGIN & REGISTER --------------------
 
 // Render login page
 router.get("/login", (req, res) => {
   res.render("login");
 });
 
-// Render register page (user only)
+// Render register page (for regular students/users)
 router.get("/register", (req, res) => {
   res.render("register");
 });
@@ -42,7 +45,8 @@ router.post("/register", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Decide college name based on selection
-    const belongsToCollege = isCollegeStudent === "yes" ? "SNGCE" : college;
+    const belongsToCollege =
+      isCollegeStudent === "yes" ? "SNGCE" : college || "Unknown";
 
     await User.create({
       name,
@@ -52,7 +56,6 @@ router.post("/register", async (req, res) => {
       department,
       belongsToCollege,
       role: "user",
-      s,
     });
 
     res.redirect("/login");
@@ -62,20 +65,24 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// Handle login for admin, faculty, and user
+// -------------------- LOGIN FOR ALL ROLES --------------------
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Check Admin
+    // Admin Login
     const admin = await Admin.findOne({ email });
     if (admin && (await bcrypt.compare(password, admin.password))) {
-      req.session.userId = admin._id;
-      req.session.role = "admin";
+      req.session.user = {
+        _id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        role: "admin",
+      };
       return res.redirect("/admin/adminDashboard");
     }
 
-    // Check Faculty (separate collection)
+    // Faculty Login
     const faculty = await Faculty.findOne({ email });
     if (faculty && (await bcrypt.compare(password, faculty.password))) {
       req.session.user = {
@@ -84,11 +91,22 @@ router.post("/login", async (req, res) => {
         email: faculty.email,
         role: "faculty",
       };
-      req.session.role = "faculty";
       return res.redirect("/faculty/dashboard");
     }
 
-    // Check User
+    // Event Coordinator Login
+    const coordinator = await EventCoordinator.findOne({ email });
+    if (coordinator && (await bcrypt.compare(password, coordinator.password))) {
+      req.session.user = {
+        _id: coordinator._id,
+        name: coordinator.name,
+        email: coordinator.email,
+        role: "eventCoordinator",
+      };
+      return res.redirect("/event-coordinator/dashboard");
+    }
+
+    // User Login
     const user = await User.findOne({ email });
     if (user && (await bcrypt.compare(password, user.password))) {
       req.session.user = {
@@ -97,7 +115,6 @@ router.post("/login", async (req, res) => {
         email: user.email,
         role: "user",
       };
-      req.session.role = "user";
       return res.redirect("/user/dashboard");
     }
 
@@ -109,7 +126,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// Logout
+// -------------------- LOGOUT --------------------
 router.get("/logout", (req, res) => {
   req.session.destroy(() => {
     res.redirect("/login");

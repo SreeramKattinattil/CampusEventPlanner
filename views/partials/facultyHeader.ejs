@@ -2,53 +2,62 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Faculty Panel</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-100 text-gray-800">
 
-  <!-- Header -->
-  <header class="bg-gray-900 text-white p-5 shadow-lg">
-    <div class="container mx-auto flex justify-between items-center">
-      
-      <!-- Logo -->
-      <a href="/faculty/dashboard" class="text-3xl font-bold text-teal-400 hover:text-teal-300 transition">
-        Faculty Panel
+  <!-- Sidebar -->
+  <aside class="fixed inset-y-0 left-0 w-60 bg-gray-900 text-gray-200 flex flex-col py-6">
+    <h2 class="text-center text-2xl font-bold text-white mb-8">Faculty</h2>
+    <nav class="flex-1 space-y-2">
+      <a href="/faculty/dashboard" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition">
+        🏠 <span class="ml-3">Dashboard</span>
       </a>
-      
-      <!-- Navigation -->
-      <nav class="flex items-center space-x-6 text-sm md:text-base">
-        <a href="/faculty/events" class="text-gray-300 hover:text-white font-medium transition-colors duration-300">My Events</a>
-        <a href="/faculty/add-event" class="text-gray-300 hover:text-white font-medium transition-colors duration-300">Add Event</a>
-        <a href="/faculty/students" class="text-gray-300 hover:text-white font-medium transition-colors duration-300">Students</a>
-        
-        <!-- User Dropdown -->
-        <div class="relative group">
-          <button class="flex items-center space-x-2 text-gray-300 hover:text-white focus:outline-none transition-colors duration-300">
-            <!-- User Icon -->
-            <svg class="h-8 w-8 rounded-full bg-gray-700 p-1" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 
-                       1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 
-                       1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-            </svg>
-            <!-- Faculty Name -->
-            <span class="hidden md:inline"><%= faculty.name %></span>
-            <!-- Down Arrow -->
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          
-          <!-- Dropdown -->
-          <div class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-50 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 invisible group-hover:visible group-focus-within:visible transition-opacity duration-300">
-            <a href="/faculty/profile" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition">Profile</a>
-            <a href="/logout" class="block px-4 py-2 text-sm text-red-400 hover:bg-gray-700 transition">Logout</a>
-          </div>
-        </div>
-      </nav>
+      <a href="/faculty/events" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition">
+        📅 <span class="ml-3">My Events</span>
+      </a>
+      <a href="/faculty/add-event" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition">
+        ➕ <span class="ml-3">Add Event</span>
+      </a>
+      <a href="/faculty/students" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition">
+        🎓 <span class="ml-3">Students</span>
+      </a>
+      <a href="/faculty/event-coordinators" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition">
+        🤝 <span class="ml-3">Event Coordinators</span>
+      </a>
+      <a href="/faculty/add-event-coordinator" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition">
+        ➕ <span class="ml-3">Add Event Coordinator</span>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Topbar -->
+  <div class="ml-60 bg-white shadow rounded-lg px-6 py-4 flex justify-between items-center">
+    <h1 class="text-xl font-semibold">Faculty Dashboard</h1>
+    <div class="relative group">
+      <button class="flex items-center space-x-2 focus:outline-none">
+        <!-- Faculty avatar -->
+        <svg class="w-10 h-10 rounded-full bg-gray-700 p-1 text-gray-200" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 
+            1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 
+            1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+        </svg>
+        <span class="hidden md:inline font-medium"><%= faculty.name %></span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+            d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </button>
+
+      <!-- Dropdown -->
+      <div class="absolute right-0 mt-2 w-48 bg-gray-800 text-gray-200 rounded-lg shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition">
+        <a href="/faculty/profile" class="block px-4 py-2 text-sm hover:bg-gray-700">Profile</a>
+        <a href="/logout" class="block px-4 py-2 text-sm text-red-400 hover:bg-gray-700">Logout</a>
+      </div>
     </div>
-  </header>
+  </div>
 
 </body>
 </html>
