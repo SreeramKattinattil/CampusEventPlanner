@@ -1,22 +1,18 @@
-// D:\MiniProject\CampusEventPlanner\routes\user.js
-
 const express = require("express");
 const router = express.Router();
 
-router.get("/dashboard", (req, res) => {
-  if (req.session.role !== "user") {
-    return res.status(403).send("Access denied");
-  }
+// Middleware to protect user routes
+function isUser(req, res, next) {
+  if (req.session.user && req.session.user.role === "user") return next();
+  res.status(403).send("Access denied");
+}
 
+// User Dashboard
+router.get("/dashboard", isUser, (req, res) => {
   const user = req.session.user;
-  if (!user) {
-    return res
-      .status(400)
-      .send("User data not found in session. Please log in again.");
-  }
+  if (!user) return res.send("User session not found. Please log in again.");
 
-  // Pass the user object to the EJS template
-  res.render("user/dashboard", { user: user });
+  res.render("user/dashboard", { user });
 });
 
 module.exports = router;

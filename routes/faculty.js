@@ -2,11 +2,11 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const router = express.Router();
 
-const EventCoordinator = require("../models/eventCoordinator"); // Import model
+const EventCoordinator = require("../models/eventCoordinator");
 
-// Middleware to protect faculty routes
+// Inline middleware to check faculty login
 function isFaculty(req, res, next) {
-  if (req.session.role === "faculty") {
+  if (req.session.user && req.session.user.role === "faculty") {
     return next();
   }
   res.redirect("/login");
@@ -26,23 +26,22 @@ router.get("/add-event-coordinator", isFaculty, (req, res) => {
 router.post("/add-event-coordinator", isFaculty, async (req, res) => {
   const { name, email, department, password } = req.body;
 
+  if (!password) return res.send("Password is required");
+
   try {
-    // Check if email already exists
     const exists = await EventCoordinator.findOne({ email });
     if (exists) {
       return res.send("Event coordinator with this email already exists.");
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create coordinator
     await EventCoordinator.create({
       name,
       email,
       password: hashedPassword,
       department,
-      createdBy: req.session.user._id, // track who created them
+      createdBy: req.session.user._id,
     });
 
     res.redirect("/faculty/event-coordinators");

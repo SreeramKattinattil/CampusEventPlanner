@@ -7,19 +7,13 @@ const Admin = require("../models/admin");
 const Faculty = require("../models/faculty");
 const EventCoordinator = require("../models/eventCoordinator");
 
-// -------------------- LOGIN & REGISTER --------------------
-
 // Render login page
-router.get("/login", (req, res) => {
-  res.render("login");
-});
+router.get("/login", (req, res) => res.render("login"));
 
-// Render register page (for regular students/users)
-router.get("/register", (req, res) => {
-  res.render("register");
-});
+// Render register page for students
+router.get("/register", (req, res) => res.render("register"));
 
-// Handle user registration
+// Handle student registration
 router.post("/register", async (req, res) => {
   const {
     name,
@@ -32,19 +26,13 @@ router.post("/register", async (req, res) => {
     college,
   } = req.body;
 
+  if (password !== confirmPassword) return res.send("Passwords do not match");
+
   try {
     const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.send("User already exists");
-    }
-
-    if (password !== confirmPassword) {
-      return res.send("Passwords do not match");
-    }
+    if (existingUser) return res.send("User already exists");
 
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Decide college name based on selection
     const belongsToCollege =
       isCollegeStudent === "yes" ? "SNGCE" : college || "Unknown";
 
@@ -60,65 +48,41 @@ router.post("/register", async (req, res) => {
 
     res.redirect("/login");
   } catch (err) {
-    console.error("Registration error:", err);
+    console.error(err);
     res.send("Registration failed");
   }
 });
 
-// -------------------- LOGIN FOR ALL ROLES --------------------
+// Login for all roles
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Admin Login
-    const admin = await Admin.findOne({ email });
-    if (admin && (await bcrypt.compare(password, admin.password))) {
-      req.session.user = {
-        _id: admin._id,
-        name: admin.name,
-        email: admin.email,
-        role: "admin",
-      };
-      return res.redirect("/admin/adminDashboard");
-    }
-
-    // Faculty Login
-    const faculty = await Faculty.findOne({ email });
-    if (faculty && (await bcrypt.compare(password, faculty.password))) {
-      req.session.user = {
-        _id: faculty._id,
-        name: faculty.name,
-        email: faculty.email,
-        role: "faculty",
-      };
-      return res.redirect("/faculty/dashboard");
-    }
-
-    // Event Coordinator Login
-    const coordinator = await EventCoordinator.findOne({ email });
-    if (coordinator && (await bcrypt.compare(password, coordinator.password))) {
-      req.session.user = {
-        _id: coordinator._id,
-        name: coordinator.name,
-        email: coordinator.email,
+    const users = [
+      { model: Admin, role: "admin", redirect: "/admin/adminDashboard" },
+      { model: Faculty, role: "faculty", redirect: "/faculty/dashboard" },
+      {
+        model: EventCoordinator,
         role: "eventCoordinator",
-      };
-      return res.redirect("/event-coordinator/dashboard");
+        redirect: "/event-coordinator/dashboard",
+      },
+      { model: User, role: "user", redirect: "/user/dashboard" },
+    ];
+
+    for (const u of users) {
+      const user = await u.model.findOne({ email });
+      if (user && (await bcrypt.compare(password, user.password))) {
+        req.session.user = {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: u.role,
+        };
+        return req.session.save(() => res.redirect(u.redirect));
+      }
     }
 
-    // User Login
-    const user = await User.findOne({ email });
-    if (user && (await bcrypt.compare(password, user.password))) {
-      req.session.user = {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: "user",
-      };
-      return res.redirect("/user/dashboard");
-    }
-
-    // No match found
+    // No user matched
     res.send("Invalid email or password");
   } catch (err) {
     console.error("Login error:", err);
@@ -126,11 +90,9 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// -------------------- LOGOUT --------------------
+// Logout
 router.get("/logout", (req, res) => {
-  req.session.destroy(() => {
-    res.redirect("/login");
-  });
+  req.session.destroy(() => res.redirect("/login"));
 });
 
 module.exports = router;

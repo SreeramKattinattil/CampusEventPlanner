@@ -1,0 +1,11 @@
+[33mcommit fae7f4caeb7396df4712bd830ec8889ae5edb4d5[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: sreeram r <sreeramrkattinattil>
+Date:   Thu Aug 14 18:13:49 2025 +0530
+
+    Assign Event Organiser by Faculty
+
+[33mcommit 91793b49463b1cf7c0589844ca4da852c4f755ce[m
+Author: sreeram r <sreeramrkattinattil>
+Date:   Sat Aug 9 16:25:25 2025 +0530
+
+    Initial project upload with Admin,user,faculty auth
