@@ -1,0 +1,129 @@
+<%- include("../partials/eventcoordinatorHeader") %>
+
+<main class="ml-60 p-8 bg-gradient-to-br from-gray-100 to-gray-200 min-h-screen">
+  <div class="max-w-4xl mx-auto">
+    <div class="backdrop-blur-lg bg-white/80 rounded-2xl shadow-2xl border border-white/50 p-8 animate-fadeIn">
+      <h2 class="text-3xl font-extrabold text-gray-800 mb-6">Create Event</h2>
+      <p class="text-gray-500 mb-8">Fill in the details below to add a new event.</p>
+
+      <form action="/event-coordinator/create-event" method="POST" enctype="multipart/form-data" class="grid md:grid-cols-2 gap-6">
+        
+        <div class="relative md:col-span-2">
+          <input type="text" id="name" name="name" required
+                 class="peer w-full border border-gray-300 rounded-lg bg-transparent px-4 pt-5 pb-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                 oninput="checkInput(this)">
+          <label for="name"
+                 class="absolute left-4 top-5 text-gray-500 text-base transition-all duration-300 peer-focus:top-2.5 peer-focus:text-gray-500 peer-focus:text-sm">
+            Event Name
+          </label>
+        </div>
+
+        <div class="relative md:col-span-2">
+          <textarea id="description" name="description" rows="3"
+                    class="peer w-full border border-gray-300 rounded-lg bg-transparent px-4 pt-5 pb-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                    oninput="checkInput(this)"></textarea>
+          <label for="description"
+                 class="absolute left-4 top-5 text-gray-500 text-base transition-all duration-300 peer-focus:top-2.5 peer-focus:text-gray-500 peer-focus:text-sm">
+            Description
+          </label>
+        </div>
+
+        <div class="relative">
+          <label for="date" class="block text-sm font-semibold text-gray-600 mb-2">Date</label>
+          <input type="date" id="date" name="date" required
+                 class="w-full border border-gray-300 rounded-lg bg-white px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+        </div>
+
+        <div class="relative">
+          <label for="time" class="block text-sm font-semibold text-gray-600 mb-2">Time</label>
+          <input type="time" id="time" name="time" required
+                 class="w-full border border-gray-300 rounded-lg bg-white px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+        </div>
+
+        <div class="relative md:col-span-2">
+          <input type="text" id="venue" name="venue" required
+                 class="peer w-full border border-gray-300 rounded-lg bg-transparent px-4 pt-5 pb-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                 oninput="checkInput(this)">
+          <label for="venue"
+                 class="absolute left-4 top-5 text-gray-500 text-base transition-all duration-300 peer-focus:top-2.5 peer-focus:text-gray-500 peer-focus:text-sm">
+            Venue
+          </label>
+        </div>
+
+        <div class="relative">
+          <input type="number" id="regFee" name="regFee" required
+                 class="peer w-full border border-gray-300 rounded-lg bg-transparent px-4 pt-5 pb-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                 oninput="checkInput(this)">
+          <label for="regFee"
+                 class="absolute left-4 top-5 text-gray-500 text-base transition-all duration-300 peer-focus:top-2.5 peer-focus:text-gray-500 peer-focus:text-sm">
+            Registration Fee
+          </label>
+        </div>
+        
+        <div class="relative">
+          <input type="number" id="participants" name="participants" required
+                 class="peer w-full border border-gray-300 rounded-lg bg-transparent px-4 pt-5 pb-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                 oninput="checkInput(this)">
+          <label for="participants"
+                 class="absolute left-4 top-5 text-gray-500 text-base transition-all duration-300 peer-focus:top-2.5 peer-focus:text-gray-500 peer-focus:text-sm">
+            Max Participants
+          </label>
+        </div>
+
+        <div class="relative md:col-span-2">
+          <input type="text" id="contactInfo" name="contactInfo" required
+                 class="peer w-full border border-gray-300 rounded-lg bg-transparent px-4 pt-5 pb-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                 oninput="checkInput(this)">
+          <label for="contactInfo"
+                 class="absolute left-4 top-5 text-gray-500 text-base transition-all duration-300 peer-focus:top-2.5 peer-focus:text-gray-500 peer-focus:text-sm">
+            Contact Info
+          </label>
+        </div>
+
+        <div class="md:col-span-2">
+          <label for="media" class="block text-sm font-semibold text-gray-600 mb-2">Upload Event Images</label>
+          <input type="file" id="media" name="media" multiple accept="image/*"
+                 class="w-full border border-gray-300 rounded-lg bg-white px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+          <p class="text-xs text-gray-400 mt-1">You can select multiple images at once.</p>
+        </div>
+
+        <div class="md:col-span-2 pt-4">
+          <button type="submit"
+                  class="w-full py-3 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold shadow-lg transform hover:scale-[1.02] transition">
+            🎉 Create Event
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+
+<style>
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fadeIn { animation: fadeIn 0.4s ease-out; }
+  
+  /* Additional CSS to handle the floating label effect */
+  .has-value + label {
+    top: 0.625rem !important; /* Adjust top for floating */
+    font-size: 0.75rem !important; /* Adjust font size */
+  }
+</style>
+<script>
+  function checkInput(input) {
+    if (input.value.length > 0) {
+      input.parentElement.querySelector('label').classList.add('has-value');
+    } else {
+      input.parentElement.querySelector('label').classList.remove('has-value');
+    }
+  }
+
+  // Also check on page load for autofilled inputs
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.peer').forEach(input => {
+      checkInput(input);
+    });
+  });
+</script>

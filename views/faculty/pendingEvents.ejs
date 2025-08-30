@@ -1,0 +1,48 @@
+<%- include("../partials/facultyHeader", { faculty: faculty, stats: stats }) %>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pending Events</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 p-6">
+  <div class="max-w-5xl mx-auto bg-white shadow-lg rounded-lg p-6">
+    <h2 class="text-2xl font-bold mb-6">Pending Events</h2>
+
+    <% if (events.length === 0) { %>
+      <p class="text-gray-600">No pending events to review.</p>
+    <% } else { %>
+      <ul class="space-y-4">
+        <% events.forEach(event => { %>
+          <li class="border p-4 rounded-lg bg-gray-50">
+            <h3 class="text-xl font-semibold"><%= event.name %></h3>
+            <p class="text-gray-700"><%= event.description %></p>
+            <p class="text-sm text-gray-500 mt-1">
+              Date: <%= event.date %> | Time: <%= event.time %> | Venue: <%= event.venue %>
+            </p>
+            <p class="text-sm text-gray-500">Reg Fee: ₹<%= event.regFee %></p>
+            <p class="text-sm text-gray-500">Participants: <%= event.participants %></p>
+            <p class="text-sm text-gray-500">Contact: <%= event.contactInfo %></p>
+
+            <div class="mt-4 flex space-x-2">
+              <form action="/faculty/approve/<%= event._id %>" method="POST">
+                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                  Approve
+                </button>
+              </form>
+              <form action="/faculty/reject/<%= event._id %>" method="POST">
+                <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
+                  Reject
+                </button>
+              </form>
+            </div>
+          </li>
+        <% }) %>
+      </ul>
+    <% } %>
+  </div>
+</body>
+</html>

@@ -8,7 +8,7 @@ const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
 const adminRoutes = require("./routes/admin");
 const facultyRouter = require("./routes/faculty");
-const eventCoordinatorRoutes = require("./routes/eventCoordinator"); // added
+const eventCoordinatorRoutes = require("./routes/eventCoordinator");
 
 const createDefaultAdmin = require("./hash");
 
@@ -18,6 +18,9 @@ const PORT = process.env.PORT || 3000;
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.set("view engine", "ejs");
+
+// Serve uploads folder so files can be accessed
+app.use("/uploads", express.static("uploads"));
 
 // Session setup
 app.use(
@@ -34,7 +37,7 @@ app.use("/", authRoutes);
 app.use("/user", userRoutes);
 app.use("/admin", adminRoutes);
 app.use("/faculty", facultyRouter);
-app.use("/event-coordinator", eventCoordinatorRoutes); // added
+app.use("/event-coordinator", eventCoordinatorRoutes); // ✅ keep this
 
 // MongoDB connect
 mongoose
