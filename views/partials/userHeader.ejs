@@ -1,35 +1,74 @@
-<header class="bg-gray-800 text-white p-5 shadow-xl">
-  <div class="container mx-auto flex justify-between items-center">
-    <a href="/user/dashboard" class="text-2xl font-extrabold text-teal-400">Campus Event Portal</a>
-    
-    <nav class="flex items-center space-x-6">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Campus Event Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
 
-      <a href="/register" class="text-gray-300 hover:text-white font-semibold transition-colors duration-300">Registration</a>
+  <!-- Sidebar -->
+  <aside class="fixed inset-y-0 left-0 w-60 bg-gray-900 text-gray-200 flex flex-col py-6">
+    <h2 class="text-center text-2xl font-bold text-teal-400 mb-8">Campus Portal</h2>
+    <nav class="flex-1 space-y-2">
+      <a href="/user/dashboard" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition duration-200">
+        🏠 <span class="ml-3">Dashboard</span>
+      </a>
+      <a href="/register" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition duration-200">
+        📝 <span class="ml-3">Registration</span>
+      </a>
+      <a href="/user/events" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition duration-200">
+        📅 <span class="ml-3">Events</span>
+      </a>
+      <a href="/user/feedback" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition duration-200">
+        💬 <span class="ml-3">Feedback</span>
+      </a>
+    </nav>
+  </aside>
 
-      <div class="relative">
-        <a href="#" class="text-gray-300 hover:text-white transition-colors duration-300">
-          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-          </svg>
-        </a>
-      </div>
-      
+  <!-- Main Content -->
+  <main class="ml-60 p-6">
+    <!-- Header -->
+    <div class="bg-white shadow rounded-lg px-6 py-4 flex justify-between items-center">
+      <h1 class="text-xl font-semibold">Welcome, <%= user.name %></h1>
       <div class="relative group">
-        <button class="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-300 focus:outline-none">
-          <svg class="h-8 w-8 rounded-full" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path>
-          </svg>
-          <span class="hidden md:inline"><%= user.name %></span>
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <button class="flex items-center space-x-2 focus:outline-none">
+          <img src="https://i.pravatar.cc/40?img=5" alt="User" class="w-10 h-10 rounded-full border">
+          <span class="hidden md:inline font-medium"><%= user.name %></span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
           </svg>
         </button>
-        
-        <div class="absolute right-0 mt-2 w-48 bg-gray-700 rounded-md shadow-lg py-1 z-50 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-300 invisible group-hover:visible group-focus-within:visible">
-          <a href="/user/profile" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-600 transition-colors duration-200">Profile</a>
-          <a href="/logout" class="block px-4 py-2 text-sm text-red-400 hover:bg-gray-600 transition-colors duration-200">Logout</a>
+
+        <!-- Dropdown -->
+        <div class="absolute right-0 mt-2 w-48 bg-gray-800 text-gray-200 rounded-lg shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition">
+          <a href="/user/profile" class="block px-4 py-2 text-sm hover:bg-gray-700">Profile</a>
+          <a href="/logout" class="block px-4 py-2 text-sm text-red-400 hover:bg-gray-700">Logout</a>
         </div>
       </div>
-    </nav>
-  </div>
-</header>
+    </div>
+
+    <!-- Dashboard Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+      <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+        <h3 class="text-lg font-semibold mb-2">Registered Events</h3>
+        <p class="text-gray-500">5 events registered</p>
+      </div>
+      <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+        <h3 class="text-lg font-semibold mb-2">Upcoming Events</h3>
+        <p class="text-gray-500">2 events scheduled</p>
+      </div>
+      <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+        <h3 class="text-lg font-semibold mb-2">Feedback Submitted</h3>
+        <p class="text-gray-500">3 feedbacks this week</p>
+      </div>
+      <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+        <h3 class="text-lg font-semibold mb-2">Profile Status</h3>
+        <p class="text-gray-500">Complete</p>
+      </div>
+    </div>
+  </main>
+
+</body>
+</html>

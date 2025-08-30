@@ -1,0 +1,105 @@
+<%- include("../partials/adminHeader") %>
+
+<div class="p-6 lg:ml-64 bg-gray-50 min-h-screen">
+  <div class="max-w-6xl mx-auto bg-white rounded-xl shadow-lg border border-gray-200 p-8">
+
+    <!-- Page Title -->
+    <h2 class="text-3xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+      👩‍🎓 Manage Students
+    </h2>
+
+    <!-- Search Bar -->
+    <form action="/admin/students" method="GET" class="mb-6 flex items-center gap-3">
+      <input 
+        type="text" 
+        name="search" 
+        value="<%= typeof search !== 'undefined' ? search : '' %>"
+        placeholder="Search by name, email, or department..." 
+        class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+      <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+        Search
+      </button>
+    </form>
+
+    <!-- Bulk Delete Form -->
+    <form id="bulkDeleteForm" action="/admin/delete-multiple-students" method="POST">
+      <div class="mb-4 flex justify-between items-center">
+        <div>
+          <button 
+            type="submit" 
+            onclick="return confirm('Are you sure you want to delete selected students?')"
+            class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-md">
+            🗑 Delete Selected
+          </button>
+        </div>
+        <div class="text-gray-500 text-sm">
+          Total Students: <%= students.length %>
+        </div>
+      </div>
+
+      <!-- Students Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full border border-gray-200">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-4 py-2 border">
+                <input type="checkbox" id="selectAll">
+              </th>
+              <th class="px-4 py-2 border">Name</th>
+              <th class="px-4 py-2 border">Email</th>
+              <th class="px-4 py-2 border">Belongs to College</th>
+              <th class="px-4 py-2 border">College Name</th>
+              <th class="px-4 py-2 border">Department</th>
+              <th class="px-4 py-2 border">Semester</th>
+              <th class="px-4 py-2 border">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (students.length > 0) { %>
+              <% students.forEach(student => { %>
+                <tr class="hover:bg-gray-50">
+                  <td class="px-4 py-2 border text-center">
+                    <input type="checkbox" name="studentIds" value="<%= student._id %>">
+                  </td>
+                  <td class="px-4 py-2 border"><%= student.name %></td>
+                  <td class="px-4 py-2 border"><%= student.email %></td>
+                  <td class="px-4 py-2 border"><%= student.belongsToCollege %></td>
+                  <td class="px-4 py-2 border">
+                    <%= student.belongsToCollege === "No" ? (student.otherCollegeName || "N/A") : "Our College" %>
+                  </td>
+                  <td class="px-4 py-2 border"><%= student.department %></td>
+                  <td class="px-4 py-2 border"><%= student.semester %></td>
+                  <td class="px-4 py-2 border flex gap-2">
+                    <a href="/admin/edit-student/<%= student._id %>" 
+                      class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg">
+                      ✏️ Edit
+                    </a>
+                    <form action="/admin/delete-student/<%= student._id %>" method="POST" onsubmit="return confirm('Delete this student?')">
+                      <button type="submit" 
+                        class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg">
+                        🗑 Delete
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="8" class="text-center py-4 text-gray-500">No students found</td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Select / Deselect all checkboxes
+  document.getElementById('selectAll').addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('input[name="studentIds"]');
+    checkboxes.forEach(cb => cb.checked = this.checked);
+  });
+</script>
