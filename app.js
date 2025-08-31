@@ -9,6 +9,7 @@ const userRoutes = require("./routes/user");
 const adminRoutes = require("./routes/admin");
 const facultyRouter = require("./routes/faculty");
 const eventCoordinatorRoutes = require("./routes/eventCoordinator");
+const dashboardRoutes = require("./routes/dashboard");
 
 const createDefaultAdmin = require("./hash");
 
@@ -38,7 +39,7 @@ app.use("/user", userRoutes);
 app.use("/admin", adminRoutes);
 app.use("/faculty", facultyRouter);
 app.use("/event-coordinator", eventCoordinatorRoutes); // ✅ keep this
-
+app.use("/dashboard", dashboardRoutes);
 // MongoDB connect
 mongoose
   .connect(process.env.MONGO_URI)

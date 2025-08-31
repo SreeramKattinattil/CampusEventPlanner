@@ -53,20 +53,16 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// Login for all roles
+// Login for all roles → redirect everyone to common dashboard
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
     const users = [
-      { model: Admin, role: "admin", redirect: "/admin/adminDashboard" },
-      { model: Faculty, role: "faculty", redirect: "/faculty/dashboard" },
-      {
-        model: EventCoordinator,
-        role: "eventCoordinator",
-        redirect: "/event-coordinator/dashboard",
-      },
-      { model: User, role: "user", redirect: "/user/dashboard" },
+      { model: Admin, role: "admin" },
+      { model: Faculty, role: "faculty" },
+      { model: EventCoordinator, role: "eventCoordinator" },
+      { model: User, role: "user" },
     ];
 
     for (const u of users) {
@@ -78,7 +74,8 @@ router.post("/login", async (req, res) => {
           email: user.email,
           role: u.role,
         };
-        return req.session.save(() => res.redirect(u.redirect));
+        // ✅ Redirect all roles to same dashboard
+        return req.session.save(() => res.redirect("/dashboard"));
       }
     }
 
