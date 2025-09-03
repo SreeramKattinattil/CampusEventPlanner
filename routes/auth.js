@@ -20,6 +20,8 @@ router.post("/register", async (req, res) => {
     email,
     password,
     confirmPassword,
+    mobile,
+    alternateMobile,
     semester,
     department,
     isCollegeStudent,
@@ -29,31 +31,38 @@ router.post("/register", async (req, res) => {
   if (password !== confirmPassword) return res.send("Passwords do not match");
 
   try {
+    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.send("User already exists");
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const belongsToCollege =
-      isCollegeStudent === "yes" ? "SNGCE" : college || "Unknown";
 
+    // Normalize belongsToCollege & collegeName
+    const belongsToCollege = isCollegeStudent === "yes" ? "yes" : "no";
+    const otherCollegeName = isCollegeStudent === "no" ? college : null;
+
+    // Create user
     await User.create({
       name,
       email,
       password: hashedPassword,
+      mobile,
+      alternateMobile: alternateMobile || null,
       semester,
       department,
       belongsToCollege,
+      otherCollegeName,
       role: "user",
     });
 
     res.redirect("/login");
   } catch (err) {
-    console.error(err);
+    console.error("Registration error:", err);
     res.send("Registration failed");
   }
 });
 
-// Login for all roles → redirect everyone to common dashboard
+// Login for all roles → role-based redirect
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -61,7 +70,7 @@ router.post("/login", async (req, res) => {
     const users = [
       { model: Admin, role: "admin" },
       { model: Faculty, role: "faculty" },
-      { model: EventCoordinator, role: "eventCoordinator" },
+      { model: EventCoordinator, role: "eventCoordinator" }, // 👈 camelCase
       { model: User, role: "user" },
     ];
 
@@ -74,12 +83,10 @@ router.post("/login", async (req, res) => {
           email: user.email,
           role: u.role,
         };
-        // ✅ Redirect all roles to same dashboard
-        return req.session.save(() => res.redirect("/dashboard"));
+        return req.session.save(() => res.redirect("/dashboard")); // 👈 single entry point
       }
     }
 
-    // No user matched
     res.send("Invalid email or password");
   } catch (err) {
     console.error("Login error:", err);

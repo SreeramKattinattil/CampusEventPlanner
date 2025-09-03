@@ -11,40 +11,31 @@ function isAdmin(req, res, next) {
   return res.status(403).send("Access denied");
 }
 
-// ====================== DASHBOARD ======================
 router.get("/adminDashboard", isAdmin, async (req, res) => {
-  try {
-    const search = req.query.search || "";
-    let filter = {};
-
-    if (search.trim() !== "") {
-      filter = {
+  const search = (req.query.search || "").trim();
+  const filter = search
+    ? {
         $or: [
           { name: { $regex: search, $options: "i" } },
           { venue: { $regex: search, $options: "i" } },
           { description: { $regex: search, $options: "i" } },
         ],
-      };
-    }
+      }
+    : {};
 
-    const events = await Event.find(filter).sort({ date: 1 });
+  const [events, totalUsers, totalFaculty, totalEvents] = await Promise.all([
+    Event.find(filter).sort({ date: 1 }),
+    User.countDocuments({ role: "user" }),
+    Faculty.countDocuments(),
+    Event.countDocuments(),
+  ]);
 
-    const stats = {
-      totalUsers: await User.countDocuments({ role: "user" }),
-      totalFaculty: await Faculty.countDocuments(),
-      totalEvents: await Event.countDocuments(),
-    };
-
-    res.render("admin/adminDashboard", {
-      user: req.session.user,
-      events,
-      stats,
-      searchQuery: search,
-    });
-  } catch (error) {
-    console.error("Error loading admin dashboard:", error);
-    res.status(500).send("Server error");
-  }
+  res.render("admin/adminDashboard", {
+    user: req.session.user,
+    events,
+    stats: { totalUsers, totalFaculty, totalEvents },
+    searchQuery: search,
+  });
 });
 
 // ====================== FACULTY ======================

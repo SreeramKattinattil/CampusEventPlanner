@@ -28,7 +28,7 @@ router.get("/dashboard", isUser, async (req, res) => {
   try {
     const user = req.session.user;
     const events = await Event.find({ status: "approved" }).sort({ date: 1 });
-    res.render("user/userDashboard", { user, events });
+    res.render("user/dashboard", { user, events });
   } catch (err) {
     console.error("Dashboard error:", err);
     res.status(500).send("Error loading dashboard.");
