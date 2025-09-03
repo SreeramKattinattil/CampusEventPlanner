@@ -17,8 +17,18 @@ const userSchema = new mongoose.Schema({
     required: true,
   },
 
+  mobile: {
+    type: String,
+    required: true,
+  },
+
+  alternateMobile: {
+    type: String,
+    default: null, // optional
+  },
+
   belongsToCollege: {
-    type: String, // Changed from Boolean to String
+    type: String, // Yes / No (instead of boolean)
     required: true,
   },
 
@@ -44,4 +54,4 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model("User", userSchema);
+module.exports = mongoose.models.User || mongoose.model("User", userSchema);

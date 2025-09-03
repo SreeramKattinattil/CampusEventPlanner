@@ -1,1 +1,169 @@
-<%- include("../partials/eventcoordinatorHeader") %>
+<%- include('../partials/eventCoordinatorHeader', { coordinator: coordinator }) %>
+
+
+<main class="ml-60 p-8 bg-gradient-to-br from-gray-100 to-gray-200 min-h-screen">
+  <div class="max-w-6xl mx-auto">
+
+    <h2 class="text-3xl font-extrabold text-gray-800 mb-6">Featured Events</h2>
+
+    <% if (events.length > 0) { %>
+      <div class="relative overflow-hidden">
+        <!-- Carousel -->
+        <div id="carousel" class="flex items-center gap-6 transition-transform duration-500 cursor-grab">
+          <% events.forEach(event => { %>
+            <a href="/user/event/<%= event._id %>" class="slide min-w-[200px] bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/50 p-4 transition-transform duration-500">
+              <% if (event.media && event.media.length > 0) { %>
+                <img src="/uploads/<%= event.media[0] %>" alt="Event Thumbnail" class="rounded-xl mb-2 h-36 w-full object-cover">
+              <% } %>
+              <h3 class="text-lg font-semibold mb-1"><%= event.name %></h3>
+              <p class="text-sm text-gray-500">📅 <%= event.date %> | 🕒 <%= event.time %></p>
+              <p class="text-sm text-gray-500">💰 Fee: ₹<%= event.regFee %></p>
+            </a>
+          <% }) %>
+        </div>
+
+<!-- Arrows -->
+<button id="prevBtn" class="absolute left-2 top-1/2 -translate-y-1/2 bg-white/50 p-3 rounded-full shadow hover:bg-white/70 transition">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+  </svg>
+</button>
+
+<button id="nextBtn" class="absolute right-2 top-1/2 -translate-y-1/2 bg-white/50 p-3 rounded-full shadow hover:bg-white/70 transition">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+  </svg>
+</button>
+
+
+
+        <!-- Dots -->
+        <div id="dots" class="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2"></div>
+      </div>
+    <% } %>
+
+    <!-- Remaining Events Grid -->
+    <h2 class="text-3xl font-extrabold text-gray-800 mt-12 mb-6">Upcoming Events</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <% events.forEach(event => { %>
+<a href="/user/event/<%= event._id %>" class="backdrop-blur-lg bg-white/80 rounded-xl shadow-2xl border border-white/50 p-6 hover:shadow-xl transition transform hover:scale-[1.02] animate-fadeIn block">
+  <% if (event.media && event.media.length > 0) { %>
+    <img src="/uploads/<%= event.media[0] %>" alt="Event Thumbnail" class="rounded-lg mb-4 h-48 w-full object-cover">
+  <% } %>
+  <h3 class="text-xl font-semibold mb-2"><%= event.name %></h3>
+  <p class="text-sm text-gray-500">📅 <%= event.date %> | 🕒 <%= event.time %></p>
+  <p class="text-sm text-gray-500">💰 Fee: ₹<%= event.regFee %></p>
+</a>
+
+
+
+
+      <% }) %>
+    </div>
+
+  </div>
+</main>
+
+<style>
+.slide {
+  transform: scale(0.85);
+  user-select: none;
+}
+#dots span {
+  width: 10px;
+  height: 10px;
+  background: #ccc;
+  border-radius: 50%;
+  display: inline-block;
+}
+#dots span.active {
+  background: #333;
+}
+</style>
+
+<script>
+const carousel = document.getElementById('carousel');
+let slides = Array.from(carousel.children);
+let center = 2; // middle card (0-based)
+let slideWidth = slides[0].offsetWidth + 24; // card width + gap
+
+function updateCarousel() {
+  slides.forEach((slide, i) => {
+    const pos = i - center;
+    if(pos === 0) slide.style.transform = 'scale(1.1)';
+    else if(Math.abs(pos) === 1) slide.style.transform = 'scale(0.95)';
+    else if(Math.abs(pos) === 2) slide.style.transform = 'scale(0.85)';
+    else slide.style.transform = 'scale(0.75)';
+  });
+
+  const offset = center * slideWidth - slideWidth * 2;
+  carousel.style.transform = `translateX(${-offset}px)`;
+
+  // update dots
+  const dotsContainer = document.getElementById('dots');
+  dotsContainer.innerHTML = '';
+  slides.forEach((_, i) => {
+    const dot = document.createElement('span');
+    if(i === center) dot.classList.add('active');
+    dotsContainer.appendChild(dot);
+  });
+}
+
+// Infinite loop by reordering DOM
+function moveNext() {
+  center++;
+  if(center >= slides.length - 2) {
+    carousel.appendChild(slides[0]);
+    slides.push(slides.shift());
+    center--;
+  }
+  updateCarousel();
+}
+
+function movePrev() {
+  center--;
+  if(center < 2) {
+    carousel.prepend(slides[slides.length-1]);
+    slides.unshift(slides.pop());
+    center++;
+  }
+  updateCarousel();
+}
+
+// Auto-slide every 3 seconds
+let autoSlide = setInterval(moveNext, 3000);
+
+// Arrow buttons
+document.getElementById('nextBtn').addEventListener('click', () => {
+  moveNext();
+  resetAutoSlide();
+});
+document.getElementById('prevBtn').addEventListener('click', () => {
+  movePrev();
+  resetAutoSlide();
+});
+
+// Drag/Swipe support
+let isDragging = false, startX, currentTranslate = 0;
+
+carousel.addEventListener('mousedown', e => {
+  isDragging = true;
+  startX = e.clientX;
+  carousel.style.cursor = 'grabbing';
+});
+carousel.addEventListener('mouseup', e => { isDragging = false; carousel.style.cursor = 'grab'; });
+carousel.addEventListener('mouseleave', e => { isDragging = false; carousel.style.cursor = 'grab'; });
+carousel.addEventListener('mousemove', e => {
+  if(!isDragging) return;
+  const diff = e.clientX - startX;
+  if(diff > 50){ movePrev(); startX = e.clientX; resetAutoSlide(); }
+  if(diff < -50){ moveNext(); startX = e.clientX; resetAutoSlide(); }
+});
+
+function resetAutoSlide() {
+  clearInterval(autoSlide);
+  autoSlide = setInterval(moveNext, 3000);
+}
+
+updateCarousel();
+</script>

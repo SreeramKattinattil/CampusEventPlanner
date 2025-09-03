@@ -8,26 +8,27 @@
 
       <form action="/event-coordinator/create-event" method="POST" enctype="multipart/form-data" class="grid md:grid-cols-2 gap-6">
         
+        <!-- Event Name -->
         <div class="relative md:col-span-2">
           <input type="text" id="name" name="name" required
                  class="peer w-full border border-gray-300 rounded-lg bg-transparent px-4 pt-5 pb-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                  oninput="checkInput(this)">
-          <label for="name"
-                 class="absolute left-4 top-5 text-gray-500 text-base transition-all duration-300 peer-focus:top-2.5 peer-focus:text-gray-500 peer-focus:text-sm">
+          <label for="name" class="absolute left-4 top-5 text-gray-500 text-base transition-all duration-300 peer-focus:top-2.5 peer-focus:text-gray-500 peer-focus:text-sm">
             Event Name
           </label>
         </div>
 
+        <!-- Description -->
         <div class="relative md:col-span-2">
           <textarea id="description" name="description" rows="3"
                     class="peer w-full border border-gray-300 rounded-lg bg-transparent px-4 pt-5 pb-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                     oninput="checkInput(this)"></textarea>
-          <label for="description"
-                 class="absolute left-4 top-5 text-gray-500 text-base transition-all duration-300 peer-focus:top-2.5 peer-focus:text-gray-500 peer-focus:text-sm">
+          <label for="description" class="absolute left-4 top-5 text-gray-500 text-base transition-all duration-300 peer-focus:top-2.5 peer-focus:text-gray-500 peer-focus:text-sm">
             Description
           </label>
         </div>
 
+        <!-- Date & Time -->
         <div class="relative">
           <label for="date" class="block text-sm font-semibold text-gray-600 mb-2">Date</label>
           <input type="date" id="date" name="date" required
@@ -40,46 +41,66 @@
                  class="w-full border border-gray-300 rounded-lg bg-white px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
         </div>
 
+        <!-- Venue -->
         <div class="relative md:col-span-2">
           <input type="text" id="venue" name="venue" required
                  class="peer w-full border border-gray-300 rounded-lg bg-transparent px-4 pt-5 pb-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                  oninput="checkInput(this)">
-          <label for="venue"
-                 class="absolute left-4 top-5 text-gray-500 text-base transition-all duration-300 peer-focus:top-2.5 peer-focus:text-gray-500 peer-focus:text-sm">
+          <label for="venue" class="absolute left-4 top-5 text-gray-500 text-base transition-all duration-300 peer-focus:top-2.5 peer-focus:text-gray-500 peer-focus:text-sm">
             Venue
           </label>
         </div>
 
+        <!-- Department -->
+        <div class="relative md:col-span-2">
+          <select id="department" name="department" required
+                  class="peer w-full border border-gray-300 rounded-lg bg-transparent px-4 pt-5 pb-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+            <option value="" disabled selected>Select Department</option>
+            <option value="MCA">MCA</option>
+            <option value="MBA">MBA</option>
+            <option value="iMCA">iMCA</option>
+            <option value="Btech.CSE">Btech.CSE</option>
+            <option value="Btech.EEE">Btech.EEE</option>
+            <option value="Btech.ECE">Btech.ECE</option>
+            <option value="Btech.CE">Btech.CE</option>
+            <option value="Btech.ME">Btech.ME</option>
+          </select>
+          <label for="department" class="absolute left-4 top-5 text-gray-500 text-base transition-all duration-300 peer-focus:top-2.5 peer-focus:text-gray-500 peer-focus:text-sm">
+            Department
+          </label>
+        </div>
+
+        <!-- Registration Fee -->
         <div class="relative">
           <input type="number" id="regFee" name="regFee" required
                  class="peer w-full border border-gray-300 rounded-lg bg-transparent px-4 pt-5 pb-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                  oninput="checkInput(this)">
-          <label for="regFee"
-                 class="absolute left-4 top-5 text-gray-500 text-base transition-all duration-300 peer-focus:top-2.5 peer-focus:text-gray-500 peer-focus:text-sm">
+          <label for="regFee" class="absolute left-4 top-5 text-gray-500 text-base transition-all duration-300 peer-focus:top-2.5 peer-focus:text-gray-500 peer-focus:text-sm">
             Registration Fee
           </label>
         </div>
-        
+
+        <!-- Max Participants -->
         <div class="relative">
           <input type="number" id="participants" name="participants" required
                  class="peer w-full border border-gray-300 rounded-lg bg-transparent px-4 pt-5 pb-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                  oninput="checkInput(this)">
-          <label for="participants"
-                 class="absolute left-4 top-5 text-gray-500 text-base transition-all duration-300 peer-focus:top-2.5 peer-focus:text-gray-500 peer-focus:text-sm">
+          <label for="participants" class="absolute left-4 top-5 text-gray-500 text-base transition-all duration-300 peer-focus:top-2.5 peer-focus:text-gray-500 peer-focus:text-sm">
             Max Participants
           </label>
         </div>
 
+        <!-- Contact Info -->
         <div class="relative md:col-span-2">
           <input type="text" id="contactInfo" name="contactInfo" required
                  class="peer w-full border border-gray-300 rounded-lg bg-transparent px-4 pt-5 pb-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                  oninput="checkInput(this)">
-          <label for="contactInfo"
-                 class="absolute left-4 top-5 text-gray-500 text-base transition-all duration-300 peer-focus:top-2.5 peer-focus:text-gray-500 peer-focus:text-sm">
+          <label for="contactInfo" class="absolute left-4 top-5 text-gray-500 text-base transition-all duration-300 peer-focus:top-2.5 peer-focus:text-gray-500 peer-focus:text-sm">
             Contact Info
           </label>
         </div>
 
+        <!-- Media Upload -->
         <div class="md:col-span-2">
           <label for="media" class="block text-sm font-semibold text-gray-600 mb-2">Upload Event Images</label>
           <input type="file" id="media" name="media" multiple accept="image/*"
@@ -87,6 +108,7 @@
           <p class="text-xs text-gray-400 mt-1">You can select multiple images at once.</p>
         </div>
 
+        <!-- Submit Button -->
         <div class="md:col-span-2 pt-4">
           <button type="submit"
                   class="w-full py-3 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold shadow-lg transform hover:scale-[1.02] transition">
@@ -99,18 +121,15 @@
 </main>
 
 <style>
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   .animate-fadeIn { animation: fadeIn 0.4s ease-out; }
-  
-  /* Additional CSS to handle the floating label effect */
+
   .has-value + label {
-    top: 0.625rem !important; /* Adjust top for floating */
-    font-size: 0.75rem !important; /* Adjust font size */
+    top: 0.625rem !important;
+    font-size: 0.75rem !important;
   }
 </style>
+
 <script>
   function checkInput(input) {
     if (input.value.length > 0) {
@@ -120,10 +139,7 @@
     }
   }
 
-  // Also check on page load for autofilled inputs
   document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.peer').forEach(input => {
-      checkInput(input);
-    });
+    document.querySelectorAll('.peer').forEach(input => { checkInput(input); });
   });
 </script>

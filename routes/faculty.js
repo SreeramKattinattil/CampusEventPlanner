@@ -19,25 +19,31 @@ async function getStats() {
   return { draftCount, approvedCount, rejectedCount };
 }
 
-// Dashboard
-router.get("/dashboard", isFaculty, async (req, res) => {
+router.get("/dashboard", async (req, res) => {
   try {
+    const faculty = req.session.user;
+    if (!faculty) return res.redirect("/login");
+
+    // Fetch events for this faculty or all upcoming events
+    const events = await Event.find({ status: "approved" }).sort({ date: 1 });
+
+    // Fetch stats if needed
     const stats = await getStats();
-    res.render("faculty/facultyDashboard", {
-      faculty: req.session.user,
-      stats,
-    });
+
+    // Pass everything to EJS
+    res.render("faculty/facultyDashboard", { faculty, stats, events });
   } catch (err) {
     console.error(err);
-    res.status(500).send("Error loading dashboard");
+    res.status(500).send("Server Error");
   }
 });
 
-// GET: Pending events
+// Pending events page
 router.get("/pending-events", isFaculty, async (req, res) => {
   try {
     const events = await Event.find({ status: "draft" });
-    const stats = await getStats(); // pass stats to header
+    const stats = await getStats();
+
     res.render("faculty/pendingEvents", {
       faculty: req.session.user,
       events,
@@ -49,7 +55,7 @@ router.get("/pending-events", isFaculty, async (req, res) => {
   }
 });
 
-// POST Approve Event
+// Approve Event
 router.post("/approve/:id", isFaculty, async (req, res) => {
   try {
     await Event.findByIdAndUpdate(req.params.id, { status: "approved" });
@@ -60,7 +66,7 @@ router.post("/approve/:id", isFaculty, async (req, res) => {
   }
 });
 
-// POST Reject Event
+// Reject Event
 router.post("/reject/:id", isFaculty, async (req, res) => {
   try {
     await Event.findByIdAndUpdate(req.params.id, { status: "rejected" });
@@ -71,7 +77,7 @@ router.post("/reject/:id", isFaculty, async (req, res) => {
   }
 });
 
-// Event Coordinator routes...
+// Add Event Coordinator page
 router.get("/add-event-coordinator", isFaculty, (req, res) => {
   res.render("faculty/addEventCoordinator", {
     faculty: req.session.user,
@@ -79,13 +85,16 @@ router.get("/add-event-coordinator", isFaculty, (req, res) => {
   });
 });
 
+// Add Event Coordinator POST
 router.post("/add-event-coordinator", isFaculty, async (req, res) => {
   const { name, email, department, password } = req.body;
   if (!password) return res.send("Password is required");
+
   try {
     const exists = await EventCoordinator.findOne({ email });
     if (exists)
       return res.send("Event coordinator with this email already exists.");
+
     const hashedPassword = await bcrypt.hash(password, 10);
     await EventCoordinator.create({
       name,
@@ -94,6 +103,7 @@ router.post("/add-event-coordinator", isFaculty, async (req, res) => {
       department,
       createdBy: req.session.user._id,
     });
+
     res.redirect("/faculty/event-coordinators");
   } catch (err) {
     console.error(err);
@@ -101,13 +111,15 @@ router.post("/add-event-coordinator", isFaculty, async (req, res) => {
   }
 });
 
+// List of Event Coordinators
 router.get("/event-coordinators", isFaculty, async (req, res) => {
   try {
     const coordinators = await EventCoordinator.find({
       createdBy: req.session.user._id,
     });
+
     res.render("faculty/eventCoordinatorList", {
-      faculty: req.session.user,
+      user: req.session.user,
       coordinators,
       stats: {},
     });

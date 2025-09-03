@@ -1,0 +1,67 @@
+<%- include('../partials/userHeader', { user: user }) %>
+
+<main class="ml-0 md:ml-60 p-4 md:p-8 bg-gray-100 min-h-screen">
+  <div class="max-w-md mx-auto bg-white rounded-2xl shadow-lg p-6">
+    <h2 class="text-2xl font-bold mb-4 text-center">Payment for <%= event.name %></h2>
+    <p class="mb-6 text-center text-lg font-medium">Amount: ₹<%= event.regFee %></p>
+
+    <!-- Razorpay form -->
+    <form id="razorpay-form" action="/user/event/<%= event._id %>/payment-success" method="POST">
+      <input type="hidden" name="razorpayPaymentId" id="razorpayPaymentId">
+      <input type="hidden" name="razorpayOrderId" id="razorpayOrderId">
+      <input type="hidden" name="razorpaySignature" id="razorpaySignature">
+
+      <!-- Buttons -->
+      <div class="flex justify-center gap-4 mt-6">
+        <button
+          type="button"
+          id="pay-now-btn"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg shadow-md transition duration-200"
+        >
+          Pay Now
+        </button>
+
+        <a
+          href="/user/event/<%= event._id %>"
+          class="bg-gray-400 hover:bg-gray-500 text-white font-semibold px-6 py-2 rounded-lg shadow-md transition duration-200"
+        >
+          Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+</main>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+  document.getElementById("pay-now-btn").onclick = function() {
+    const checkoutOptions = {
+      key: "<%= razorpayKey %>",
+      amount: "<%= amount %>",
+      currency: "INR",
+      name: "Campus Event",
+      description: "Event Registration",
+      order_id: "<%= orderId %>",
+      prefill: {
+        name: "<%= user.name %>",
+        email: "<%= user.email %>",
+        contact: "<%= user.mobile %>"
+      },
+      theme: { color: "#3399cc" },
+      handler: function(response) {
+        document.getElementById("razorpayPaymentId").value = response.razorpay_payment_id;
+        document.getElementById("razorpayOrderId").value = response.razorpay_order_id;
+        document.getElementById("razorpaySignature").value = response.razorpay_signature;
+        document.getElementById("razorpay-form").submit();
+      },
+      modal: {
+        ondismiss: function() {
+          alert("Payment cancelled. You can try again.");
+        }
+      }
+    };
+
+    const rzp1 = new Razorpay(checkoutOptions);
+    rzp1.open();
+  };
+</script>

@@ -16,6 +16,22 @@ const eventSchema = new mongoose.Schema({
     default: "draft",
   },
   media: [{ type: String }],
+  department: {
+    type: String,
+    enum: [
+      "MCA",
+      "MBA",
+      "iMCA",
+      "Btech.NASB",
+      "Btech.EEE",
+      "Btech.CE",
+      "Btech.ME",
+      "Btech.CSE",
+      "Btech.ECE",
+      "All",
+    ],
+    default: "All",
+  }, // NEW FIELD
 });
 
 module.exports = mongoose.model("Event", eventSchema);
