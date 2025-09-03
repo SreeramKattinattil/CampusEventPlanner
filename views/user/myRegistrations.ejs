@@ -1,0 +1,33 @@
+<%- include('../partials/userHeader', { user: user }) %>
+
+<main class="ml-0 md:ml-60 p-4 md:p-8 bg-gray-100 min-h-screen">
+  <h1 class="text-2xl font-bold mb-6">My Registrations</h1>
+
+  <% if (registrations.length === 0) { %>
+    <p>No registrations yet.</p>
+  <% } else { %>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <% registrations.forEach(reg => { %>
+        <div class="bg-white p-6 rounded-xl shadow-md">
+          <h2 class="text-xl font-semibold mb-2"><%= reg.eventId.name %></h2>
+          <p class="mb-1"><strong>Date:</strong> <%= reg.eventId.date %></p>
+          <p class="mb-1"><strong>Venue:</strong> <%= reg.eventId.venue %></p>
+          <p class="mb-1"><strong>Payment:</strong> 
+            <% if (reg.paymentStatus === "paid") { %>
+              <span class="text-green-600 font-bold">Paid</span>
+            <% } else { %>
+              <span class="text-red-600 font-bold">Pending</span>
+            <% } %>
+          </p>
+
+          <% if (reg.paymentStatus === "pending") { %>
+            <a href="/user/event/<%= reg.eventId._id %>/payment" 
+               class="mt-2 inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+              Pay Now
+            </a>
+          <% } %>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</main>

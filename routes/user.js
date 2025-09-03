@@ -186,24 +186,32 @@ router.post("/event/:id/payment-success", isUser, async (req, res) => {
     res.status(500).send("Error updating payment status.");
   }
 });
-
-// routes/user.js
+/* ===========================================================
+   VIEW MY REGISTRATIONS (ALL, including unpaid)
+=========================================================== */
 router.get("/my-registrations", isUser, async (req, res) => {
   try {
-    const userId = req.session.user._id;
+    const registrations = await Registration.find({
+      userId: req.session.user._id,
+    })
+      .populate("eventId") // include event details
+      .sort({ createdAt: -1 });
 
-    // Fetch registrations of the logged-in user
-    const registrations = await Registration.find({ user: userId }).populate(
-      "event"
-    );
+    if (!registrations.length) {
+      return res.render("user/myRegistrations", {
+        user: req.session.user,
+        registrations: [],
+        message: "You have no registrations yet.",
+      });
+    }
 
     res.render("user/myRegistrations", {
       user: req.session.user,
       registrations,
     });
   } catch (err) {
-    console.error("Error fetching registrations:", err);
-    res.status(500).send("Error loading registrations.");
+    console.error("My Registrations error:", err);
+    res.status(500).send("Server Error");
   }
 });
 

@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const Event = require("../models/Event");
 
-<<<<<<< HEAD
 // Middleware to check login
 function isLoggedIn(req, res, next) {
   if (req.session.user) return next();
@@ -38,7 +37,7 @@ router.get("/dashboard", isLoggedIn, async (req, res) => {
   }
 });
 
-// ✅ Event Details route for all roles (including admin)
+// Event Details route for all roles
 router.get("/dashboard/eventDetails/:id", isLoggedIn, async (req, res) => {
   try {
     const user = req.session.user;
@@ -63,26 +62,6 @@ router.get("/dashboard/eventDetails/:id", isLoggedIn, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send("Error loading event details.");
-=======
-// Middleware to protect route (optional)
-function isAuthenticated(req, res, next) {
-  if (req.session.user) {
-    return next();
-  }
-  res.redirect("/login");
-}
-
-router.get("/", isAuthenticated, async (req, res) => {
-  try {
-    const events = await Event.find();
-    res.render("user/dashboard", {
-      events,
-      user: req.session.user, // 👈 pass user here
-    });
-  } catch (err) {
-    console.error(err);
-    res.redirect("/");
->>>>>>> 09cfc989681bf89c136db5e13d701d0c58a8b47f
   }
 });
 

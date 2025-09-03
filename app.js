@@ -9,11 +9,8 @@ const userRoutes = require("./routes/user");
 const adminRoutes = require("./routes/admin");
 const facultyRouter = require("./routes/faculty");
 const eventCoordinatorRoutes = require("./routes/eventCoordinator");
-<<<<<<< HEAD
 const paymentRoutes = require("./routes/payment");
-=======
 const dashboardRoutes = require("./routes/dashboard");
->>>>>>> 09cfc989681bf89c136db5e13d701d0c58a8b47f
 
 const createDefaultAdmin = require("./hash");
 
@@ -42,13 +39,10 @@ app.use("/", authRoutes);
 app.use("/user", userRoutes);
 app.use("/admin", adminRoutes);
 app.use("/faculty", facultyRouter);
-app.use("/event-coordinator", eventCoordinatorRoutes); // ✅ keep this
-<<<<<<< HEAD
+app.use("/event-coordinator", eventCoordinatorRoutes);
 app.use("/payment", paymentRoutes);
-
-=======
 app.use("/dashboard", dashboardRoutes);
->>>>>>> 09cfc989681bf89c136db5e13d701d0c58a8b47f
+
 // MongoDB connect
 mongoose
   .connect(process.env.MONGO_URI)
