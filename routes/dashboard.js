@@ -1,8 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const Event = require("../models/Event");
-const User = require("../models/user");
-const Faculty = require("../models/faculty");
 
 // Middleware to check login
 function isLoggedIn(req, res, next) {
@@ -27,7 +25,6 @@ router.get("/", isLoggedIn, async (req, res) => {
         approvedCount: await Event.countDocuments({ status: "approved" }),
         rejectedCount: await Event.countDocuments({ status: "rejected" }),
       };
-      // 👇 EJS expects faculty + stats
       return res.render("faculty/facultyDashboard", {
         faculty: user,
         events,
@@ -38,40 +35,14 @@ router.get("/", isLoggedIn, async (req, res) => {
     if (user.role === "eventCoordinator") {
       const events = await Event.find({ status: "approved" }).sort({ date: 1 });
       return res.render("eventCoordinator/eventCoordinatorDashboard", {
-        eventCoordinator: user, // 👈 pass as eventCoordinator
+        eventCoordinator: user,
         events,
       });
     }
 
+    // If admin tries to hit /dashboard, redirect them to /admin/adminDashboard
     if (user.role === "admin") {
-      const search = (req.query.search || "").trim();
-      const filter = search
-        ? {
-            $or: [
-              { name: { $regex: search, $options: "i" } },
-              { venue: { $regex: search, $options: "i" } },
-              { description: { $regex: search, $options: "i" } },
-            ],
-          }
-        : {};
-
-      const [events, totalUsers, totalFaculty, totalEvents] = await Promise.all(
-        [
-          Event.find(filter).sort({ date: 1 }),
-          User.countDocuments({ role: "user" }),
-          Faculty.countDocuments(),
-          Event.countDocuments(),
-        ]
-      );
-
-      const stats = { totalUsers, totalFaculty, totalEvents };
-
-      return res.render("admin/adminDashboard", {
-        admin: user, // 👈 pass as admin
-        events,
-        stats,
-        searchQuery: search,
-      });
+      return res.redirect("/admin/adminDashboard");
     }
 
     return res.status(403).send("Role not recognized");
@@ -101,8 +72,10 @@ router.get("/eventDetails/:id", isLoggedIn, async (req, res) => {
       });
     }
     if (user.role === "admin") {
-      return res.render("admin/eventDetails", { admin: user, event });
+      // redirect admin to admin route
+      return res.redirect(`/admin/eventDetails/${event._id}`);
     }
+
     return res.status(403).send("Access denied");
   } catch (err) {
     console.error(err);

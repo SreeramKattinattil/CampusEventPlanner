@@ -27,15 +27,17 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Event Coordinator Dashboard
+/* ===========================================================
+   DASHBOARD
+=========================================================== */
 router.get("/dashboard", isEventCoordinator, async (req, res) => {
   try {
     // Fetch events created by this coordinator
     const events = await Event.find({ createdBy: req.session.user._id });
 
     res.render("eventCoordinator/eventCoordinatorDashboard", {
-      coordinator: req.session.user,
-      events, // ✅ pass events to EJS
+      coordinator: req.session.user, // ✅ consistent
+      events,
     });
   } catch (err) {
     console.error("Error loading dashboard:", err);
@@ -43,15 +45,15 @@ router.get("/dashboard", isEventCoordinator, async (req, res) => {
   }
 });
 
-// Show Create Event form
+/* ===========================================================
+   CREATE EVENT
+=========================================================== */
 router.get("/create-event", isEventCoordinator, (req, res) => {
   res.render("eventCoordinator/createEvent", {
-    coordinator: req.session.user,
+    coordinator: req.session.user, // ✅ consistent
   });
 });
 
-// Handle Create Event POST
-// Handle Create Event POST
 router.post(
   "/create-event",
   isEventCoordinator,
@@ -67,7 +69,7 @@ router.post(
         regFee,
         participants,
         contactInfo,
-        department, // <-- Add this
+        department,
       } = req.body;
 
       const event = new Event({
@@ -82,11 +84,18 @@ router.post(
         createdBy: req.session.user._id,
         status: "draft", // default status
         media: req.files.map((file) => file.filename),
-        department, // <-- Save department
+        department,
       });
 
       await event.save();
-      res.redirect("/event-coordinator/dashboard");
+
+      // Fetch updated events after creation
+      const events = await Event.find({ createdBy: req.session.user._id });
+
+      res.render("eventCoordinator/eventCoordinatorDashboard", {
+        coordinator: req.session.user, // ✅ consistent
+        events,
+      });
     } catch (err) {
       console.error("Error creating event:", err);
       res.status(500).send("Error creating event");

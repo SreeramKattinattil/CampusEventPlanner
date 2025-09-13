@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
+const bcrypt = require("bcrypt"); // ✅ missing import
+const User = require("../models/user"); // ✅ missing import
 
 const Event = require("../models/Event");
 const Registration = require("../models/Registration");
@@ -212,6 +214,44 @@ router.get("/my-registrations", isUser, async (req, res) => {
   } catch (err) {
     console.error("My Registrations error:", err);
     res.status(500).send("Server Error");
+  }
+});
+
+// Show change password page
+router.get("/change-password", (req, res) => {
+  res.render("changePassword"); // consistent path
+});
+
+router.post("/change-password", async (req, res) => {
+  try {
+    const { email, newPassword, confirmPassword } = req.body;
+
+    if (newPassword !== confirmPassword) {
+      return res.render("changePassword", {
+        error: "❌ Passwords do not match",
+      });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.render("changePassword", {
+        error: "❌ No account found with this email",
+      });
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    // ✅ Stay on the same page with success message
+    return res.render("changePassword", {
+      success:
+        "✅ Password changed successfully. You can now login with your new password.",
+    });
+  } catch (err) {
+    console.error("Change password error:", err);
+    res.render("changePassword", {
+      error: "⚠️ Something went wrong. Try again.",
+    });
   }
 });
 
