@@ -15,7 +15,7 @@ router.get("/", isLoggedIn, async (req, res) => {
 
     if (user.role === "user") {
       const events = await Event.find({ status: "approved" }).sort({ date: 1 });
-      return res.render("user/dashboard", { user, events });
+      return res.render("user/userDashboard", { user, events });
     }
 
     if (user.role === "faculty") {
@@ -35,12 +35,11 @@ router.get("/", isLoggedIn, async (req, res) => {
     if (user.role === "eventCoordinator") {
       const events = await Event.find({ status: "approved" }).sort({ date: 1 });
       return res.render("eventCoordinator/eventCoordinatorDashboard", {
-        eventCoordinator: user,
+        coordinator: user, // ✅ now matches your EJS include
         events,
       });
     }
 
-    // If admin tries to hit /dashboard, redirect them to /admin/adminDashboard
     if (user.role === "admin") {
       return res.redirect("/admin/adminDashboard");
     }
@@ -67,12 +66,11 @@ router.get("/eventDetails/:id", isLoggedIn, async (req, res) => {
     }
     if (user.role === "eventCoordinator") {
       return res.render("eventCoordinator/eventDetails", {
-        eventCoordinator: user,
+        coordinator: user, // ✅ consistent naming
         event,
       });
     }
     if (user.role === "admin") {
-      // redirect admin to admin route
       return res.redirect(`/admin/eventDetails/${event._id}`);
     }
 
