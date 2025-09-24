@@ -8,6 +8,7 @@ const Event = require("../models/Event");
 const Registration = require("../models/Registration");
 const EventRegistration = require("../models/EventRegistration");
 const QRCode = require("qrcode");
+const Transaction = require("../models/Transaction");
 // Razorpay instance
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -351,6 +352,29 @@ router.get("/myEvents", isUser, async (req, res) => {
   } catch (err) {
     console.error("My Events error:", err);
     res.status(500).send("Server Error");
+  }
+});
+
+router.post("/register/:eventId", isUser, async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.eventId).populate(
+      "createdBy"
+    );
+    if (!event) return res.status(404).send("Event not found");
+
+    const transaction = await Transaction.create({
+      event: event._id,
+      coordinator: event.createdBy, // event coordinator
+      user: req.session.user._id, // logged-in student
+      amount: event.regFee,
+      paymentMethod: req.body.paymentMethod || "online",
+      status: "success", // later you can connect with Razorpay/Stripe
+    });
+
+    res.redirect(`/events/${event._id}/success`);
+  } catch (err) {
+    console.error("Error creating transaction:", err);
+    res.status(500).send("Error during registration");
   }
 });
 

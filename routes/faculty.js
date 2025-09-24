@@ -59,7 +59,7 @@ router.get("/pending-events", isFaculty, async (req, res) => {
     if (!faculty) return res.redirect("/login");
 
     const events = await Event.find({
-      status: "draft",
+      status: { $in: ["draft", "pending"] },
       assignedFaculty: faculty._id,
     }).sort({ date: 1 });
 

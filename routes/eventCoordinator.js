@@ -2,9 +2,12 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const path = require("path");
+
+// Models
 const Event = require("../models/Event");
 const EventCoordinator = require("../models/eventCoordinator");
 const Registration = require("../models/Registration");
+const Transaction = require("../models/Transaction");
 
 // =====================
 // Middleware: Protect Event Coordinator Routes
@@ -20,7 +23,7 @@ function isEventCoordinator(req, res, next) {
 // Multer Storage Config for Media Upload
 // =====================
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"), // ensure folder exists
+  destination: (req, file, cb) => cb(null, "uploads/"),
   filename: (req, file, cb) =>
     cb(
       null,
@@ -30,7 +33,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // =====================
-// Dashboard: Show Events
+// Dashboard
 // =====================
 router.get("/dashboard", isEventCoordinator, async (req, res) => {
   try {
@@ -41,8 +44,8 @@ router.get("/dashboard", isEventCoordinator, async (req, res) => {
       { date: 1 }
     );
     const facultyApprovedEvents = await Event.find({
-      status: "approved",
       assignedFaculty: coordinator.createdBy,
+      status: "approved",
     }).sort({ date: 1 });
 
     const formatEvents = (events) =>
@@ -61,13 +64,6 @@ router.get("/dashboard", isEventCoordinator, async (req, res) => {
     console.error("Error loading dashboard:", err);
     res.status(500).send("Error loading dashboard");
   }
-});
-
-// =====================
-// Create Event Page
-// =====================
-router.get("/create-event", isEventCoordinator, (req, res) => {
-  res.render("eventCoordinator/createEvent", { coordinator: req.session.user });
 });
 
 // =====================
@@ -106,11 +102,22 @@ router.post(
         department,
         createdBy: coordinator._id,
         assignedFaculty: coordinator.createdBy,
-        status: "draft",
+        status: "pending",
         media: req.files.map((file) => file.filename),
       });
 
-      await newEvent.save();
+      const savedEvent = await newEvent.save();
+
+      // ✅ Create transaction after event is saved
+      await Transaction.create({
+        event: savedEvent._id,
+        coordinator: coordinator._id,
+        amount: regFee || 0,
+        paymentMethod: "N/A",
+        status: "success",
+        createdAt: new Date(),
+      });
+
       res.redirect("/event-coordinator/dashboard");
     } catch (err) {
       console.error("Error creating event:", err);
@@ -120,7 +127,7 @@ router.post(
 );
 
 // =====================
-// Event Details (Paid / Not Paid Students)
+// Event Details (Registrations)
 // =====================
 router.get("/eventDetails/:id", isEventCoordinator, async (req, res) => {
   try {
@@ -154,7 +161,6 @@ router.get("/scan-qr", isEventCoordinator, async (req, res) => {
       { date: 1 }
     );
 
-    // Format dates
     const eventsWithFormattedDate = createdEvents.map((e) => ({
       ...e._doc,
       dateFormatted: new Date(e.date).toDateString(),
@@ -193,8 +199,19 @@ router.post("/scan-qr", isEventCoordinator, async (req, res) => {
         });
     }
 
+    if (registration.paymentStatus !== "paid") {
+      return res.json({
+        success: false,
+        message: `${registration.userId.name} has not paid registration fee`,
+        status: "unpaid",
+      });
+    }
+
     if (registration.status === "attended") {
-      return res.json({ success: true, message: "Already marked as attended" });
+      return res.json({
+        success: true,
+        message: `${registration.userId.name} already marked as attended`,
+      });
     }
 
     registration.status = "attended";
@@ -213,7 +230,7 @@ router.post("/scan-qr", isEventCoordinator, async (req, res) => {
 });
 
 // =====================
-// Get attendance for an event (AJAX)
+// Event Attendance (AJAX)
 // =====================
 router.get("/event-attendance/:id", isEventCoordinator, async (req, res) => {
   try {
@@ -226,13 +243,62 @@ router.get("/event-attendance/:id", isEventCoordinator, async (req, res) => {
     const registrations = await Registration.find({
       eventId: event._id,
     }).populate("userId", "name email");
-
     res.json({ success: true, registrations });
   } catch (err) {
     console.error("Attendance fetch error:", err);
     res
       .status(500)
       .json({ success: false, message: "Failed to fetch attendance" });
+  }
+});
+
+// =====================
+// Pending Events
+// =====================
+router.get("/pending-events", isEventCoordinator, async (req, res) => {
+  try {
+    const coordinator = await EventCoordinator.findById(req.session.user._id);
+    if (!coordinator) return res.status(404).send("Coordinator not found");
+
+    const pendingEvents = await Event.find({
+      createdBy: coordinator._id,
+      status: { $in: ["draft", "pending", "rejected"] },
+    }).sort({ date: 1 });
+
+    const formattedEvents = pendingEvents.map((e) => ({
+      ...e._doc,
+      dateFormatted: new Date(e.date).toDateString(),
+    }));
+
+    res.render("eventCoordinator/pendingEvents", {
+      coordinator,
+      pendingEvents: formattedEvents,
+    });
+  } catch (err) {
+    console.error("Error fetching pending events:", err);
+    res.status(500).send("Error loading pending events");
+  }
+});
+
+// =====================
+// Transactions page
+// =====================
+router.get("/transactions", isEventCoordinator, async (req, res) => {
+  try {
+    const coordinatorId = req.session.user._id;
+
+    const transactions = await Transaction.find({ coordinator: coordinatorId })
+      .populate("event", "name")
+      .populate("user", "name email")
+      .sort({ createdAt: -1 });
+
+    res.render("eventCoordinator/transactions", {
+      coordinator: req.session.user,
+      transactions,
+    });
+  } catch (err) {
+    console.error("Error loading transactions:", err);
+    res.status(500).send("Error loading transactions");
   }
 });
 

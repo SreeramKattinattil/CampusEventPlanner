@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const eventSchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: { type: String },
-  date: { type: String, required: true },
+  date: { type: Date, required: true }, // changed to Date type
   time: { type: String, required: true },
   venue: { type: String, required: true },
   regFee: { type: Number, required: true },
@@ -12,7 +12,7 @@ const eventSchema = new mongoose.Schema({
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "EventCoordinator" },
   status: {
     type: String,
-    enum: ["draft", "approved", "rejected"],
+    enum: ["draft", "pending", "approved", "rejected"],
     default: "draft",
   },
   media: [{ type: String }],
@@ -33,7 +33,7 @@ const eventSchema = new mongoose.Schema({
     default: "All",
   },
   assignedFaculty: { type: mongoose.Schema.Types.ObjectId, ref: "Faculty" },
-  rejectionNote: { type: String }, // store rejection reason
+  rejectionNote: { type: String },
   notifications: [
     {
       message: String,

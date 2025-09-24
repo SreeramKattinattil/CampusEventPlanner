@@ -1,0 +1,49 @@
+<%- include('../partials/eventCoordinatorHeader', { coordinator: coordinator }) %>
+
+<main class="ml-0 md:ml-60 p-6 bg-gray-100 min-h-screen">
+  <div class="max-w-6xl mx-auto bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">Transactions</h2>
+
+    <% if (transactions && transactions.length > 0) { %>
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse rounded-lg overflow-hidden">
+          <thead class="bg-gray-200 text-gray-700">
+            <tr>
+              <th class="py-3 px-4 text-left">Event</th>
+              <th class="py-3 px-4 text-left">Student</th>
+              <th class="py-3 px-4 text-left">Amount</th>
+              <th class="py-3 px-4 text-left">Payment Method</th>
+              <th class="py-3 px-4 text-left">Status</th>
+              <th class="py-3 px-4 text-left">Date</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <% transactions.forEach(t => { %>
+              <tr class="hover:bg-gray-50">
+                <td class="py-3 px-4"><%= t.event ? t.event.name : "Deleted Event" %></td>
+                <td class="py-3 px-4">
+                  <%= t.user ? t.user.name : "Unknown" %> 
+                  (<%= t.user ? t.user.email : "-" %>)
+                </td>
+                <td class="py-3 px-4">₹<%= t.amount %></td>
+                <td class="py-3 px-4"><%= t.paymentMethod || "-" %></td>
+                <td class="py-3 px-4">
+                  <% if(t.status === "success"){ %>
+                    <span class="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">Success</span>
+                  <% } else if(t.status === "failed"){ %>
+                    <span class="px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-800">Failed</span>
+                  <% } else { %>
+                    <span class="px-3 py-1 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-800">Pending</span>
+                  <% } %>
+                </td>
+                <td class="py-3 px-4"><%= t.createdAt ? new Date(t.createdAt).toLocaleDateString() : "-" %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <p class="text-gray-600 text-center py-8">No transactions found yet.</p>
+    <% } %>
+  </div>
+</main>

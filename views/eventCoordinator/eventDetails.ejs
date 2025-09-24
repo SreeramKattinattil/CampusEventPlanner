@@ -1,49 +1,47 @@
 <%- include('../partials/eventCoordinatorHeader', { coordinator: coordinator }) %>
 
-<main class="ml-0 md:ml-60 p-4 md:p-8 bg-gray-100 min-h-screen">
-  <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-lg p-6">
+<main class="ml-0 md:ml-60 p-6 bg-gray-50 min-h-screen">
+  <div class="max-w-6xl mx-auto bg-white rounded-2xl shadow-md p-6">
 
-    <h2 class="text-3xl font-bold mb-6"><%= event.name %> - Registrations</h2>
+    <h2 class="text-3xl font-semibold mb-6 text-gray-800"><%= event.name %> - Registrations</h2>
 
     <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">#</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Registered By</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Participants</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Payment Status</th>
+      <table class="min-w-full text-left">
+        <thead>
+          <tr class="border-b border-gray-200">
+            <th class="px-4 py-3 text-sm font-medium text-gray-600">#</th>
+            <th class="px-4 py-3 text-sm font-medium text-gray-600">Registered By</th>
+            <th class="px-4 py-3 text-sm font-medium text-gray-600">Participants</th>
+            <th class="px-4 py-3 text-sm font-medium text-gray-600">Payment Status</th>
           </tr>
         </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-          <% if(!registrations || registrations.length === 0){ %>
+        <tbody>
+          <% if (!registrations || registrations.length === 0) { %>
             <tr>
-              <td colspan="4" class="px-4 py-4 text-center text-gray-500">
-                No registrations yet.
-              </td>
+              <td colspan="4" class="px-4 py-6 text-center text-gray-400 font-medium">No registrations yet.</td>
             </tr>
           <% } else { %>
             <% registrations.forEach((reg, index) => { %>
-              <tr class="hover:bg-gray-50">
-                <td class="px-4 py-2"><%= index + 1 %></td>
-                <td class="px-4 py-2">
+              <tr class="hover:bg-gray-50 transition-colors duration-200">
+                <td class="px-4 py-3 text-gray-700 font-medium"><%= index + 1 %></td>
+                <td class="px-4 py-3 text-gray-800">
                   <%= reg.userId ? reg.userId.name : '-' %> <br>
                   <span class="text-gray-500 text-sm"><%= reg.userId ? reg.userId.email : '-' %></span>
                 </td>
-                <td class="px-4 py-2">
+                <td class="px-4 py-3 space-y-1">
                   <% reg.participants.forEach((p, pIndex) => { %>
-                    <div class="mb-2 border-b border-gray-200 pb-1">
-                      <strong>Participant <%= pIndex + 1 %>:</strong> <%= p.name %> | <%= p.email %> | <%= p.mobNo %> 
-                      <% if(p.altMobNo) { %> | Alt: <%= p.altMobNo %> <% } %>
-                      <% if(p.college) { %> | College: <%= p.college %> <% } %>
-                      <% if(p.branch) { %> | Branch: <%= p.branch %> <% } %>
-                      <% if(p.semester) { %> | Semester: <%= p.semester %> <% } %>
+                    <div class="p-2 bg-gray-50 rounded">
+                      <p class="text-gray-700 font-medium">Participant <%= pIndex + 1 %>:</p>
+                      <p class="text-gray-600 text-sm"><%= p.name %> | <%= p.email %> | <%= p.mobNo %> <% if(p.altMobNo){ %>| Alt: <%= p.altMobNo %><% } %></p>
+                      <% if(p.college){ %><p class="text-gray-600 text-sm">College: <%= p.college %></p><% } %>
+                      <% if(p.branch){ %><p class="text-gray-600 text-sm">Branch: <%= p.branch %></p><% } %>
+                      <% if(p.semester){ %><p class="text-gray-600 text-sm">Semester: <%= p.semester %></p><% } %>
                     </div>
                   <% }) %>
                 </td>
-                <td class="px-4 py-2">
-                  <span class="<%= reg.paymentStatus === 'paid' ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold' %>">
-                    <%= reg.paymentStatus === "paid" ? "Paid" : "Not Paid" %>
+                <td class="px-4 py-3">
+                  <span class="<%= reg.paymentStatus === 'paid' ? 'text-green-600' : 'text-red-600' %> font-semibold">
+                    <%= reg.paymentStatus === 'paid' ? 'Paid' : 'Not Paid' %>
                   </span>
                 </td>
               </tr>
@@ -53,6 +51,15 @@
       </table>
     </div>
 
-    <a href="/event-coordinator/dashboard" class="mt-6 inline-block text-blue-500 hover:underline">← Back to Dashboard</a>
+    <div class="mt-6">
+      <a href="/event-coordinator/dashboard" class="text-blue-600 hover:underline font-medium">← Back to Dashboard</a>
+    </div>
   </div>
 </main>
+
+<style>
+  body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f9fafb;
+  }
+</style>

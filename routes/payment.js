@@ -70,7 +70,6 @@ router.post("/create-order", async (req, res) => {
     res.status(500).json({ success: false, message: "Order creation failed" });
   }
 });
-
 // Verify payment
 router.post("/verify", async (req, res) => {
   try {
@@ -86,15 +85,39 @@ router.post("/verify", async (req, res) => {
     const generatedSignature = hmac.digest("hex");
 
     if (generatedSignature === razorpay_signature) {
-      await Registration.findByIdAndUpdate(registrationId, {
-        paymentStatus: "paid",
-        razorpayPaymentId: razorpay_payment_id,
-        razorpaySignature: razorpay_signature,
-      });
+      // ✅ Update registration
+      const registration = await Registration.findByIdAndUpdate(
+        registrationId,
+        {
+          paymentStatus: "paid",
+          razorpayPaymentId: razorpay_payment_id,
+          razorpaySignature: razorpay_signature,
+        },
+        { new: true }
+      ).populate("eventId userId");
+
+      // ✅ Create a Transaction entry
+      const Transaction = require("../models/Transaction");
+      const Event = require("../models/Event");
+
+      const event = await Event.findById(registration.eventId).populate(
+        "createdBy"
+      );
+
+      if (event) {
+        await Transaction.create({
+          event: event._id,
+          coordinator: event.createdBy?._id || null, // ensure ID exists
+          user: registration.userId?._id || req.session.user._id, // fallback
+          amount: event.regFee,
+          paymentMethod: "online",
+          status: "success",
+        });
+      }
 
       return res.json({
         success: true,
-        message: "Payment verified successfully",
+        message: "Payment verified and transaction recorded",
       });
     } else {
       return res

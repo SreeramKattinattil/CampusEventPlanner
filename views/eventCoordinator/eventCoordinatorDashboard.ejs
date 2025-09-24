@@ -4,60 +4,90 @@
   <div class="max-w-6xl mx-auto">
     <h1 class="text-4xl font-bold text-gray-800 mb-8">Welcome, <%= coordinator.name %>!</h1>
 
-    <!-- Events Created by Coordinator -->
-    <section class="mb-12">
-      <h2 class="text-2xl font-semibold mb-4">Events You Created</h2>
-
-      <% if (!createdEvents || createdEvents.length === 0) { %>
-        <p class="text-gray-600">You have not created any events yet.</p>
-      <% } else { %>
-        <ul class="space-y-4">
-          <% createdEvents.forEach(event => { %>
-            <li class="p-4 bg-white rounded-xl shadow hover:shadow-lg transition">
-              <h3 class="text-xl font-bold text-gray-800"><%= event.name %></h3>
-              <p class="text-gray-700"><%= event.description || "No description provided." %></p>
-              <p class="text-sm text-gray-500 mt-1">
-                Date: <%= event.dateFormatted %> | Time: <%= event.time %> | Venue: <%= event.venue %>
-              </p>
-              <p class="text-sm text-gray-500">Reg Fee: ₹<%= event.regFee %></p>
-              <p class="text-sm text-gray-500">Participants: <%= event.participants %></p>
-              <a href="/event-coordinator/eventDetails/<%= event._id %>"
-                 class="text-blue-600 hover:underline mt-2 inline-block">View Details</a>
-            </li>
-          <% }) %>
-        </ul>
-      <% } %>
-    </section>
-
     <!-- Faculty Approved Events -->
     <section>
-      <h2 class="text-2xl font-semibold mb-4">Faculty Approved Events</h2>
+      <h2 class="text-3xl font-semibold mb-6 text-gray-700">Faculty Approved Events</h2>
 
       <% if (!facultyApprovedEvents || facultyApprovedEvents.length === 0) { %>
-        <p class="text-gray-600">No approved events available.</p>
+        <p class="text-gray-600 text-lg">No approved events available.</p>
       <% } else { %>
-        <ul class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <% facultyApprovedEvents.forEach(event => { %>
-            <li class="p-4 bg-white rounded-xl shadow hover:shadow-lg transition">
-              <h3 class="text-xl font-bold text-gray-800"><%= event.name %></h3>
-              <p class="text-gray-700"><%= event.description || "No description provided." %></p>
-              <p class="text-sm text-gray-500 mt-1">
-                Date: <%= event.dateFormatted %> | Time: <%= event.time %> | Venue: <%= event.venue %>
-              </p>
-              <p class="text-sm text-gray-500">Reg Fee: ₹<%= event.regFee %></p>
-              <p class="text-sm text-gray-500">Participants: <%= event.participants %></p>
-              <a href="/event-coordinator/eventDetails/<%= event._id %>"
-                 class="text-blue-600 hover:underline mt-2 inline-block">View Details</a>
-            </li>
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition">
+              
+              <!-- Event Media Carousel -->
+              <% if (event.media && event.media.length > 0) { %>
+                <div class="relative overflow-hidden h-48">
+                  <div class="carousel flex transition-transform duration-500" id="carousel-<%= event._id %>">
+                    <% event.media.forEach((img, index) => { %>
+                      <img src="/uploads/<%= img %>" 
+                           alt="<%= event.name %>" 
+                           class="w-full h-48 object-cover flex-shrink-0">
+                    <% }) %>
+                  </div>
+                  <button onclick="prevSlide('<%= event._id %>')" class="absolute left-2 top-1/2 transform -translate-y-1/2 bg-gray-800 bg-opacity-50 text-white px-2 py-1 rounded-full hover:bg-opacity-70">‹</button>
+                  <button onclick="nextSlide('<%= event._id %>')" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-800 bg-opacity-50 text-white px-2 py-1 rounded-full hover:bg-opacity-70">›</button>
+                </div>
+              <% } else { %>
+                <div class="bg-gray-200 h-48 flex items-center justify-center text-gray-500">
+                  No Image
+                </div>
+              <% } %>
+
+              <div class="p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-2"><%= event.name %></h3>
+                <p class="text-gray-600 mb-2"><%= event.description || "No description provided." %></p>
+                
+                <div class="text-sm text-gray-500 mb-2">
+                  <p><strong>Date:</strong> <%= event.dateFormatted %></p>
+                  <p><strong>Time:</strong> <%= event.time %></p>
+                  <p><strong>Venue:</strong> <%= event.venue %></p>
+                </div>
+
+                <div class="flex justify-between items-center text-sm text-gray-600 mb-4">
+                  <span>Reg Fee: ₹<%= event.regFee %></span>
+                  <span>Participants: <%= event.participants %></span>
+                </div>
+
+                <a href="/event-coordinator/eventDetails/<%= event._id %>"
+                   class="inline-block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-xl transition">
+                   View Registrations
+                </a>
+              </div>
+            </div>
           <% }) %>
-        </ul>
+        </div>
       <% } %>
     </section>
   </div>
 </main>
 
+<script>
+  const slideIndex = {};
+
+  function nextSlide(id) {
+    const carousel = document.getElementById(`carousel-${id}`);
+    if (!slideIndex[id]) slideIndex[id] = 0;
+    slideIndex[id]++;
+    if (slideIndex[id] >= carousel.children.length) slideIndex[id] = 0;
+    carousel.style.transform = `translateX(-${slideIndex[id] * 100}%)`;
+  }
+
+  function prevSlide(id) {
+    const carousel = document.getElementById(`carousel-${id}`);
+    if (!slideIndex[id]) slideIndex[id] = 0;
+    slideIndex[id]--;
+    if (slideIndex[id] < 0) slideIndex[id] = carousel.children.length - 1;
+    carousel.style.transform = `translateX(-${slideIndex[id] * 100}%)`;
+  }
+</script>
+
 <style>
   body {
     font-family: 'Inter', sans-serif;
+  }
+  .carousel img {
+    min-width: 100%;
+    transition: transform 0.5s ease-in-out;
   }
 </style>
