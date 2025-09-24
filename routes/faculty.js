@@ -12,25 +12,37 @@ function isFaculty(req, res, next) {
 }
 
 // Helper: get event stats
-async function getStats() {
-  const draftCount = await Event.countDocuments({ status: "draft" });
-  const approvedCount = await Event.countDocuments({ status: "approved" });
-  const rejectedCount = await Event.countDocuments({ status: "rejected" });
+async function getStats(facultyId) {
+  const draftCount = await Event.countDocuments({
+    status: "draft",
+    assignedFaculty: facultyId,
+  });
+  const approvedCount = await Event.countDocuments({
+    status: "approved",
+    assignedFaculty: facultyId,
+  });
+  const rejectedCount = await Event.countDocuments({
+    status: "rejected",
+    assignedFaculty: facultyId,
+  });
   return { draftCount, approvedCount, rejectedCount };
 }
 
-router.get("/dashboard", async (req, res) => {
+/* ===========================================================
+   FACULTY DASHBOARD
+=========================================================== */
+router.get("/dashboard", isFaculty, async (req, res) => {
   try {
     const faculty = req.session.user;
     if (!faculty) return res.redirect("/login");
 
-    // Fetch events for this faculty or all upcoming events
-    const events = await Event.find({ status: "approved" }).sort({ date: 1 });
+    const events = await Event.find({
+      status: "approved",
+      assignedFaculty: faculty._id,
+    }).sort({ date: 1 });
 
-    // Fetch stats if needed
-    const stats = await getStats();
+    const stats = await getStats(faculty._id);
 
-    // Pass everything to EJS
     res.render("faculty/facultyDashboard", { faculty, stats, events });
   } catch (err) {
     console.error(err);
@@ -38,27 +50,49 @@ router.get("/dashboard", async (req, res) => {
   }
 });
 
-// Pending events page
+/* ===========================================================
+   PENDING EVENTS
+=========================================================== */
 router.get("/pending-events", isFaculty, async (req, res) => {
   try {
-    const events = await Event.find({ status: "draft" });
-    const stats = await getStats();
+    const faculty = req.session.user;
+    if (!faculty) return res.redirect("/login");
+
+    const events = await Event.find({
+      status: "draft",
+      assignedFaculty: faculty._id,
+    }).sort({ date: 1 });
+
+    const stats = await getStats(faculty._id);
 
     res.render("faculty/pendingEvents", {
-      faculty: req.session.user,
+      faculty,
       events,
       stats,
     });
   } catch (err) {
-    console.error(err);
+    console.error("Error fetching pending events:", err);
     res.status(500).send("Error fetching pending events.");
   }
 });
 
-// Approve Event
+/* ===========================================================
+   APPROVE EVENT
+=========================================================== */
 router.post("/approve/:id", isFaculty, async (req, res) => {
   try {
-    await Event.findByIdAndUpdate(req.params.id, { status: "approved" });
+    const faculty = req.session.user;
+
+    await Event.findByIdAndUpdate(req.params.id, {
+      status: "approved",
+      $push: {
+        notifications: {
+          message: `✅ Event approved successfully by ${faculty.name}`,
+          createdAt: new Date(),
+        },
+      },
+    });
+
     res.redirect("/faculty/pending-events");
   } catch (err) {
     console.error(err);
@@ -66,10 +100,29 @@ router.post("/approve/:id", isFaculty, async (req, res) => {
   }
 });
 
-// Reject Event
+/* ===========================================================
+   REJECT EVENT (with reason)
+=========================================================== */
 router.post("/reject/:id", isFaculty, async (req, res) => {
   try {
-    await Event.findByIdAndUpdate(req.params.id, { status: "rejected" });
+    const faculty = req.session.user;
+    const { reason } = req.body; // reason comes from form
+
+    if (!reason || reason.trim() === "") {
+      return res.send("Rejection reason is required.");
+    }
+
+    await Event.findByIdAndUpdate(req.params.id, {
+      status: "rejected",
+      rejectionNote: reason, // ✅ match schema field
+      $push: {
+        notifications: {
+          message: `❌ Event rejected by ${faculty.name}. Reason: ${reason}`,
+          createdAt: new Date(),
+        },
+      },
+    });
+
     res.redirect("/faculty/pending-events");
   } catch (err) {
     console.error(err);
@@ -77,7 +130,9 @@ router.post("/reject/:id", isFaculty, async (req, res) => {
   }
 });
 
-// Add Event Coordinator page
+/* ===========================================================
+   ADD EVENT COORDINATOR
+=========================================================== */
 router.get("/add-event-coordinator", isFaculty, (req, res) => {
   res.render("faculty/addEventCoordinator", {
     faculty: req.session.user,
@@ -85,7 +140,6 @@ router.get("/add-event-coordinator", isFaculty, (req, res) => {
   });
 });
 
-// Add Event Coordinator POST
 router.post("/add-event-coordinator", isFaculty, async (req, res) => {
   const { name, email, department, password } = req.body;
   if (!password) return res.send("Password is required");
@@ -111,7 +165,9 @@ router.post("/add-event-coordinator", isFaculty, async (req, res) => {
   }
 });
 
-// List of Event Coordinators
+/* ===========================================================
+   LIST EVENT COORDINATORS
+=========================================================== */
 router.get("/event-coordinators", isFaculty, async (req, res) => {
   try {
     const coordinators = await EventCoordinator.find({

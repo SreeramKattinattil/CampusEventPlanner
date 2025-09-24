@@ -1,0 +1,47 @@
+<%- include("../partials/userHeader") %>
+
+<div class="max-w-2xl mx-auto bg-white shadow-lg rounded-xl p-6 mt-10">
+  <h2 class="text-2xl font-bold mb-6">Edit Profile</h2>
+
+  <form action="/user/profile/edit" method="POST" enctype="multipart/form-data" class="space-y-4">
+    <div>
+      <label>Name</label>
+      <input type="text" name="name" value="<%= user.name %>" class="w-full border rounded p-2" required>
+    </div>
+    <div>
+      <label>Mobile</label>
+      <input type="text" name="mobile" value="<%= user.mobile %>" class="w-full border rounded p-2" required>
+    </div>
+    <div>
+      <label>Alternate Mobile</label>
+      <input type="text" name="alternateMobile" value="<%= user.alternateMobile || '' %>" class="w-full border rounded p-2">
+    </div>
+    <div>
+      <label>College</label>
+      <select name="belongsToCollege" class="w-full border rounded p-2">
+        <option value="Yes" <%= user.belongsToCollege === "Yes" ? "selected" : "" %>>Own College</option>
+        <option value="No" <%= user.belongsToCollege === "No" ? "selected" : "" %>>Other</option>
+      </select>
+    </div>
+    <div>
+      <label>Other College (if any)</label>
+      <input type="text" name="otherCollegeName" value="<%= user.otherCollegeName || '' %>" class="w-full border rounded p-2">
+    </div>
+    <div>
+      <label>Department</label>
+      <input type="text" name="department" value="<%= user.department %>" class="w-full border rounded p-2" required>
+    </div>
+    <div>
+      <label>Semester</label>
+      <input type="text" name="semester" value="<%= user.semester %>" class="w-full border rounded p-2" required>
+    </div>
+    <div>
+      <label>Profile Image</label>
+      <input type="file" name="profileImage" class="w-full border rounded p-2">
+    </div>
+
+    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+      Save Changes
+    </button>
+  </form>
+</div>

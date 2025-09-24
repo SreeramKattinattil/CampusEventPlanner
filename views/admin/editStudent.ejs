@@ -1,4 +1,4 @@
-<%- include("../partials/adminHeader") %>
+<%= (events ? events.filter(event => new Date(event.date) >= new Date()).length : 0) %>
 
 <div class="p-6 lg:ml-64 bg-gray-50 min-h-screen">
   <div class="max-w-6xl mx-auto bg-white rounded-xl shadow-lg border border-gray-200 p-8">

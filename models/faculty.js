@@ -8,4 +8,6 @@ const facultySchema = new mongoose.Schema({
   role: { type: String, default: "faculty" },
 });
 
-module.exports = mongoose.model("Faculty", facultySchema);
+// Use existing model if it exists
+module.exports =
+  mongoose.models.Faculty || mongoose.model("Faculty", facultySchema);

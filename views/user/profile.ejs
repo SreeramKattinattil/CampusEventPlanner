@@ -1,0 +1,65 @@
+<%- include('../partials/userHeader', { user: user, registeredCount: registrations.length, upcomingCount: 0, feedbackCount: 0 }) %>
+
+<main class="ml-60 p-6">
+  <h1 class="text-2xl font-bold mb-6">My Profile</h1>
+
+  <% if(success){ %>
+    <div class="bg-green-100 text-green-800 p-4 rounded mb-4"><%= success %></div>
+  <% } %>
+  <% if(error){ %>
+    <div class="bg-red-100 text-red-800 p-4 rounded mb-4"><%= error %></div>
+  <% } %>
+
+  <!-- Edit Personal Info -->
+  <form action="/user/profile" method="POST" class="bg-white p-6 rounded-lg shadow space-y-4 max-w-lg mb-6">
+    <h2 class="text-xl font-semibold mb-4">Personal Information</h2>
+
+    <div>
+      <label class="block font-medium mb-1">Name</label>
+      <input type="text" name="name" value="<%= user.name %>" class="w-full border rounded px-3 py-2"/>
+    </div>
+
+    <div>
+      <label class="block font-medium mb-1">Department</label>
+      <input type="text" name="department" value="<%= user.department || '' %>" class="w-full border rounded px-3 py-2"/>
+    </div>
+
+    <div>
+      <label class="block font-medium mb-1">Semester</label>
+      <input type="text" name="semester" value="<%= user.semester || '' %>" class="w-full border rounded px-3 py-2"/>
+    </div>
+
+    <div>
+      <label class="block font-medium mb-1">Mobile</label>
+      <input type="text" name="mobile" value="<%= user.mobile || '' %>" class="w-full border rounded px-3 py-2"/>
+    </div>
+
+    <button type="submit" class="bg-teal-500 text-white px-4 py-2 rounded hover:bg-teal-600 transition">
+      Save Changes
+    </button>
+  </form>
+
+  <!-- Registration Details -->
+  <div class="bg-white p-6 rounded-lg shadow">
+    <h2 class="text-xl font-semibold mb-4">Event Registrations</h2>
+
+    <% if(registrations.length === 0){ %>
+      <p class="text-gray-500">You have no registrations yet.</p>
+    <% } else { %>
+      <% registrations.forEach(reg => { %>
+        <div class="border-b border-gray-200 py-4">
+          <h3 class="text-lg font-semibold"><%= reg.eventId?.name || 'Event Deleted' %></h3>
+          <p>Status: <span class="<%= reg.paymentStatus === 'paid' ? 'text-green-600' : 'text-red-500' %> font-medium"><%= reg.paymentStatus %></span></p>
+          <h4 class="font-medium mt-2">Participants:</h4>
+          <ul class="list-disc list-inside ml-4">
+            <% reg.participants.forEach(p => { %>
+              <li>
+                <%= p.name %> | <%= p.email %> | <%= p.mobNo %> | <%= p.college %> | <%= p.branch %> | <%= p.semester %>
+              </li>
+            <% }) %>
+          </ul>
+        </div>
+      <% }) %>
+    <% } %>
+  </div>
+</main>

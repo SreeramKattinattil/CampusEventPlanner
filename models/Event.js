@@ -31,7 +31,15 @@ const eventSchema = new mongoose.Schema({
       "All",
     ],
     default: "All",
-  }, // NEW FIELD
+  },
+  assignedFaculty: { type: mongoose.Schema.Types.ObjectId, ref: "Faculty" },
+  rejectionNote: { type: String }, // store rejection reason
+  notifications: [
+    {
+      message: String,
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
 });
 
 module.exports = mongoose.model("Event", eventSchema);

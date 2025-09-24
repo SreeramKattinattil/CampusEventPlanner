@@ -1,51 +1,60 @@
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
-const Faculty = require("../models/faculty");
-const User = require("../models/user");
+const Faculty = require("../models/Faculty");
+const User = require("../models/User");
 const Event = require("../models/Event");
 
-// Middleware to protect admin routes
+// ================= Middleware =================
 function isAdmin(req, res, next) {
   if (req.session.user && req.session.user.role === "admin") return next();
   return res.status(403).send("Access denied");
 }
 
+// ================= Utility =================
+async function getAdminHeaderData() {
+  const [totalUsers, totalFaculty, totalEvents, liveEvents, events] =
+    await Promise.all([
+      User.countDocuments({ role: "user" }),
+      Faculty.countDocuments(),
+      Event.countDocuments(),
+      Event.countDocuments({ status: "approved" }),
+      Event.find().sort({ date: 1 }),
+    ]);
+  const stats = { totalUsers, totalFaculty, totalEvents, liveEvents };
+  return { stats, events };
+}
+
+// ================= DASHBOARD =================
 router.get("/adminDashboard", isAdmin, async (req, res) => {
-  const search = (req.query.search || "").trim();
-  const filter = search
-    ? {
-        $or: [
-          { name: { $regex: search, $options: "i" } },
-          { venue: { $regex: search, $options: "i" } },
-          { description: { $regex: search, $options: "i" } },
-        ],
-      }
-    : {};
-
-  const [events, totalUsers, totalFaculty, totalEvents] = await Promise.all([
-    Event.find(filter).sort({ date: 1 }),
-    User.countDocuments({ role: "user" }),
-    Faculty.countDocuments(),
-    Event.countDocuments(),
-  ]);
-
-  res.render("admin/adminDashboard", {
-    user: req.session.user,
-    events,
-    stats: { totalUsers, totalFaculty, totalEvents },
-    searchQuery: search,
-  });
+  try {
+    const { stats, events } = await getAdminHeaderData();
+    res.render("admin/adminDashboard", {
+      admin: req.session.user,
+      stats,
+      events,
+      searchQuery: req.query.search || "",
+    });
+  } catch (err) {
+    console.error("Dashboard Error:", err);
+    res.status(500).send("Error loading dashboard");
+  }
 });
 
-// ====================== FACULTY ======================
-router.get("/addFaculty", isAdmin, (req, res) => {
-  res.render("admin/addFaculty");
+// ================= FACULTY =================
+router.get("/addFaculty", isAdmin, async (req, res) => {
+  try {
+    const { stats, events } = await getAdminHeaderData();
+    res.render("admin/addFaculty", { admin: req.session.user, stats, events });
+  } catch (err) {
+    console.error(err);
+    res.send("Error loading Add Faculty page");
+  }
 });
 
 router.post("/add-faculty", isAdmin, async (req, res) => {
-  const { name, email, password, department } = req.body;
   try {
+    const { name, email, password, department } = req.body;
     const existingFaculty = await Faculty.findOne({ email });
     if (existingFaculty)
       return res.send("Faculty with this email already exists.");
@@ -55,185 +64,163 @@ router.post("/add-faculty", isAdmin, async (req, res) => {
 
     res.redirect("/admin/adminDashboard");
   } catch (err) {
-    console.error(err);
+    console.error("Add Faculty Error:", err);
     res.send("Error adding faculty");
   }
 });
 
 router.get("/facultyList", isAdmin, async (req, res) => {
   try {
-    const facultyList = await Faculty.find({});
-    res.render("admin/facultyList", { facultyList });
+    const search = (req.query.search || "").trim();
+    const filter = search
+      ? {
+          $or: [
+            { name: { $regex: search, $options: "i" } },
+            { department: { $regex: search, $options: "i" } },
+          ],
+        }
+      : {};
+
+    const [facultyList, { stats, events }] = await Promise.all([
+      Faculty.find(filter).sort({ name: 1 }),
+      getAdminHeaderData(),
+    ]);
+
+    res.render("admin/facultyList", {
+      admin: req.session.user,
+      stats,
+      events,
+      facultyList,
+      search,
+    });
   } catch (err) {
-    console.error(err);
+    console.error("Fetch Faculty Error:", err);
     res.send("Error fetching faculties");
   }
 });
 
-// ====================== STUDENTS ======================
+router.get("/edit-faculty/:id", isAdmin, async (req, res) => {
+  try {
+    const faculty = await Faculty.findById(req.params.id);
+    if (!faculty) return res.status(404).send("Faculty not found");
+    const { stats, events } = await getAdminHeaderData();
+    res.render("admin/editFaculty", {
+      admin: req.session.user,
+      faculty,
+      stats,
+      events,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error fetching faculty");
+  }
+});
+
+router.post("/edit-faculty/:id", isAdmin, async (req, res) => {
+  try {
+    const { name, email, department } = req.body;
+    await Faculty.findByIdAndUpdate(req.params.id, { name, email, department });
+    res.redirect("/admin/facultyList");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error updating faculty");
+  }
+});
+
+router.post("/delete-faculty/:id", isAdmin, async (req, res) => {
+  try {
+    await Faculty.findByIdAndDelete(req.params.id);
+    res.redirect("/admin/facultyList");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error deleting faculty");
+  }
+});
+
+// ================= STUDENTS =================
 router.get("/students", isAdmin, async (req, res) => {
   try {
-    const search = req.query.search || "";
-    let filter = {};
-
-    if (search.trim() !== "") {
-      filter = {
-        $or: [
-          { name: { $regex: search, $options: "i" } },
-          { department: { $regex: search, $options: "i" } },
-          { belongsToCollege: { $regex: search, $options: "i" } },
-        ],
-      };
-    }
-
+    const search = (req.query.search || "").trim();
+    const filter = search
+      ? {
+          $or: [
+            { name: { $regex: search, $options: "i" } },
+            { department: { $regex: search, $options: "i" } },
+          ],
+        }
+      : {};
     const studentList = await User.find({ role: "user", ...filter });
-    res.render("admin/students", { studentList, search });
-  } catch (error) {
-    console.error(error);
+    const { stats, events } = await getAdminHeaderData();
+    res.render("admin/students", {
+      admin: req.session.user,
+      studentList,
+      stats,
+      events,
+      search,
+    });
+  } catch (err) {
+    console.error(err);
     res.status(500).send("Error fetching students");
   }
 });
 
-router.get("/edit-student/:id", isAdmin, async (req, res) => {
-  try {
-    const student = await User.findById(req.params.id);
-    if (!student) return res.status(404).send("Student not found");
-    res.render("admin/editStudent", { student });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Error fetching student");
-  }
-});
-
-router.post("/edit-student/:id", isAdmin, async (req, res) => {
-  try {
-    const {
-      name,
-      email,
-      belongsToCollege,
-      otherCollegeName,
-      department,
-      semester,
-    } = req.body;
-
-    await User.findByIdAndUpdate(req.params.id, {
-      name,
-      email,
-      belongsToCollege,
-      otherCollegeName: belongsToCollege === "Yes" ? null : otherCollegeName,
-      department,
-      semester,
-    });
-
-    res.redirect("/admin/students");
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Error updating student");
-  }
-});
-
-router.post("/delete-student/:id", isAdmin, async (req, res) => {
-  try {
-    await User.findByIdAndDelete(req.params.id);
-    res.redirect("/admin/students");
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Error deleting student");
-  }
-});
-
-// ====================== EVENTS ======================
+// ================= EVENTS =================
+// ================= EVENTS =================
+// ================= EVENTS =================
 router.get("/events", isAdmin, async (req, res) => {
   try {
-    const search = req.query.search || "";
-    let filter = {};
+    const search = (req.query.search || "").trim();
 
-    if (search.trim() !== "") {
-      filter = {
-        $or: [
-          { name: { $regex: search, $options: "i" } },
-          { venue: { $regex: search, $options: "i" } },
-          { department: { $regex: search, $options: "i" } },
-        ],
-      };
-    }
+    // Filter for searching by event name or venue
+    const filter = search
+      ? {
+          $or: [
+            { name: { $regex: search, $options: "i" } },
+            { venue: { $regex: search, $options: "i" } },
+          ],
+        }
+      : {};
 
-    const events = await Event.find(filter).sort({ date: 1 });
+    // Fetch events based on filter
+    const eventList = await Event.find(filter).sort({ date: 1 });
 
-    const stats = {
-      totalUsers: await User.countDocuments({ role: "user" }),
-      totalFaculty: await Faculty.countDocuments(),
-      totalEvents: await Event.countDocuments(),
-    };
+    // Get admin dashboard stats and all events for header
+    const { stats, events: headerEvents } = await getAdminHeaderData();
 
-    res.render("admin/adminDashboard", {
-      // render adminDashboard.ejs
-      user: req.session.user,
-      events,
+    // Render the admin events page
+    res.render("admin/events", {
+      admin: req.session.user,
       stats,
+      events: headerEvents, // used for header partial
+      eventList, // used for table display
       searchQuery: search,
     });
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
+    console.error("Error fetching events:", err);
     res.status(500).send("Error fetching events");
   }
 });
 
-// ====================== EVENT DETAILS ======================
+// ================= EVENT DETAILS =================
 router.get("/eventDetails/:id", isAdmin, async (req, res) => {
   try {
-    const event = await Event.findById(req.params.id);
+    const event = await Event.findById(req.params.id)
+      .populate("createdBy", "name")
+      .populate("assignedFaculty", "name");
+
     if (!event) return res.status(404).send("Event not found");
+
+    const { stats, events } = await getAdminHeaderData();
 
     res.render("admin/eventDetails", {
-      user: req.session.user,
+      admin: req.session.user,
       event,
-      role: "admin",
+      stats,
+      events,
     });
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
+    console.error(err);
     res.status(500).send("Error fetching event details");
-  }
-});
-
-// ====================== EVENT EDIT ======================
-router.get("/edit-event/:id", isAdmin, async (req, res) => {
-  try {
-    const event = await Event.findById(req.params.id);
-    if (!event) return res.status(404).send("Event not found");
-    res.render("admin/editEvent", { event });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Error fetching event");
-  }
-});
-
-router.post("/edit-event/:id", isAdmin, async (req, res) => {
-  try {
-    const { name, description, date, time, venue, regFee } = req.body;
-    await Event.findByIdAndUpdate(req.params.id, {
-      name,
-      description,
-      date,
-      time,
-      venue,
-      regFee,
-    });
-    res.redirect(`/admin/eventDetails/${req.params.id}`);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Error updating event");
-  }
-});
-
-// ====================== EVENT DELETE ======================
-router.post("/delete-event/:id", isAdmin, async (req, res) => {
-  try {
-    await Event.findByIdAndDelete(req.params.id);
-    res.redirect("/admin/adminDashboard");
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Error deleting event");
   }
 });
 

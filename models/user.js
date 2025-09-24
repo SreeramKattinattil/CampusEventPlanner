@@ -24,17 +24,14 @@ const userSchema = new mongoose.Schema({
 
   alternateMobile: {
     type: String,
-    default: null, // optional
-  },
-
-  belongsToCollege: {
-    type: String, // Yes / No (instead of boolean)
-    required: true,
-  },
-
-  otherCollegeName: {
-    type: String,
     default: null,
+  },
+
+  // ✅ Replace belongsToCollege + otherCollegeName with a single college field
+  college: {
+    type: String,
+    required: true,
+    default: "SNGCE",
   },
 
   department: {

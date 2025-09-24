@@ -19,7 +19,7 @@
     <% } %>
 
     <!-- Event Details -->
-    <p class="mb-2"><strong>Date:</strong> <%= event.date %></p>
+    <p class="mb-2"><strong>Date:</strong> <%= new Date(event.date).toDateString() %></p>
     <p class="mb-2"><strong>Time:</strong> <%= event.time %></p>
     <p class="mb-2"><strong>Venue:</strong> <%= event.venue %></p>
     <p class="mb-2"><strong>Registration Fee:</strong> ₹<%= event.regFee %></p>
@@ -38,67 +38,42 @@
             <!-- First participant (autofilled from user session if available) -->
             <div class="participant border p-4 rounded-lg mb-4 bg-gray-50">
               <h4 class="text-lg font-semibold mb-2">Participant 1 (You)</h4>
-
               <label class="block mb-2">Full Name</label>
-              <input type="text" name="participants[0][name]" 
-                    value="<%= user?.name || '' %>" 
-                    class="w-full border rounded-lg p-2 mb-3" required>
+              <input type="text" name="participants[0][name]" value="<%= user?.name || '' %>" class="w-full border rounded-lg p-2 mb-3" required>
 
               <label class="block mb-2">Email</label>
-              <input type="email" name="participants[0][email]" 
-                    value="<%= user?.email || '' %>" 
-                    class="w-full border rounded-lg p-2 mb-3" required>
+              <input type="email" name="participants[0][email]" value="<%= user?.email || '' %>" class="w-full border rounded-lg p-2 mb-3" required>
 
               <label class="block mb-2">Mobile Number</label>
-              <input type="text" name="participants[0][mobNo]" 
-                    value="<%= user?.mobile || '' %>" 
-                    class="w-full border rounded-lg p-2 mb-3" required>
+              <input type="text" name="participants[0][mobNo]" value="<%= user?.mobile || '' %>" class="w-full border rounded-lg p-2 mb-3" required>
 
               <label class="block mb-2">Alternate Mobile (Optional)</label>
-              <input type="text" name="participants[0][altMobNo]" 
-                    class="w-full border rounded-lg p-2 mb-3">
+              <input type="text" name="participants[0][altMobNo]" class="w-full border rounded-lg p-2 mb-3">
 
               <label class="block mb-2">College</label>
-              <input type="text" name="participants[0][college]" 
-                    value="<%= user?.college || '' %>" 
-                    class="w-full border rounded-lg p-2 mb-3" required>
+              <input type="text" name="participants[0][college]" value="<%= user?.college || '' %>" class="w-full border rounded-lg p-2 mb-3" required>
 
               <label class="block mb-2">Branch</label>
-              <input type="text" name="participants[0][branch]" 
-                    value="<%= user?.branch || '' %>" 
-                    class="w-full border rounded-lg p-2 mb-3" required>
+              <input type="text" name="participants[0][branch]" value="<%= user?.branch || '' %>" class="w-full border rounded-lg p-2 mb-3" required>
 
               <label class="block mb-2">Semester</label>
-              <input type="text" name="participants[0][semester]" 
-                    value="<%= user?.semester || '' %>" 
-                    class="w-full border rounded-lg p-2 mb-3" required>
+              <input type="text" name="participants[0][semester]" value="<%= user?.semester || '' %>" class="w-full border rounded-lg p-2 mb-3" required>
             </div>
           </div>
 
-          <!-- Add Participant Button (if multiple allowed) -->
           <% if(event.participants > 1) { %>
-            <button type="button" id="add-participant-btn" 
-                    class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-              + Add Participant
-            </button>
+            <button type="button" id="add-participant-btn" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">+ Add Participant</button>
           <% } %>
 
-          <!-- Submit Button -->
-          <button type="submit" 
-                  class="w-full px-6 py-3 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600">
-            Submit Registration
-          </button>
+          <button type="submit" class="w-full px-6 py-3 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600">Submit Registration</button>
         </form>
 
       <% } else if (registration.paymentStatus === "pending") { %>
-        <!-- Already registered but payment pending -->
+        <!-- Payment pending -->
         <div class="p-4 bg-yellow-100 border-l-4 border-yellow-500 rounded mb-4">
-          <p class="text-yellow-700 font-medium">⚠ You have registered for this event but payment is pending.</p>
+          <p class="text-yellow-700 font-medium">⚠ You have registered but payment is pending.</p>
         </div>
-        <a href="/user/event/<%= event._id %>/payment" 
-          class="inline-block px-6 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700">
-          Proceed to Payment
-        </a>
+        <a href="/user/event/<%= event._id %>/payment" class="inline-block px-6 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700">Proceed to Payment</a>
 
       <% } else if (registration.paymentStatus === "paid") { %>
         <!-- Already paid -->
@@ -108,7 +83,6 @@
       <% } %>
     </div>
 
-    <!-- Back Link -->
     <a href="/user/userDashboard" class="mt-6 inline-block text-blue-500 hover:underline">← Back to All Events</a>
   </div>
 </main>
@@ -117,7 +91,6 @@
   const maxParticipants = <%= event.participants %>;
   const container = document.getElementById("participants-container");
   const addBtn = document.getElementById("add-participant-btn");
-
   let currentCount = 1;
 
   if (addBtn) {
@@ -128,29 +101,21 @@
       div.className = "participant border p-4 rounded-lg mb-4 bg-gray-50";
       div.innerHTML = `
         <h4 class="text-lg font-semibold mb-2">Participant ${currentCount + 1}</h4>
-
         <label class="block mb-2">Full Name</label>
         <input type="text" name="participants[${currentCount}][name]" class="w-full border rounded-lg p-2 mb-3" required>
-
         <label class="block mb-2">Email</label>
         <input type="email" name="participants[${currentCount}][email]" class="w-full border rounded-lg p-2 mb-3" required>
-
         <label class="block mb-2">Mobile Number</label>
         <input type="text" name="participants[${currentCount}][mobNo]" class="w-full border rounded-lg p-2 mb-3" required>
-
         <label class="block mb-2">Alternate Mobile (Optional)</label>
         <input type="text" name="participants[${currentCount}][altMobNo]" class="w-full border rounded-lg p-2 mb-3">
-
         <label class="block mb-2">College</label>
         <input type="text" name="participants[${currentCount}][college]" class="w-full border rounded-lg p-2 mb-3" required>
-
         <label class="block mb-2">Branch</label>
         <input type="text" name="participants[${currentCount}][branch]" class="w-full border rounded-lg p-2 mb-3" required>
-
         <label class="block mb-2">Semester</label>
         <input type="text" name="participants[${currentCount}][semester]" class="w-full border rounded-lg p-2 mb-3" required>
       `;
-
       container.appendChild(div);
       currentCount++;
 

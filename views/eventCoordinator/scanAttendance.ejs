@@ -1,0 +1,122 @@
+<%- include("../partials/eventcoordinatorHeader", { coordinator: coordinator, createdEvents: createdEvents }) %>
+
+<main class="ml-0 md:ml-60 p-4 md:p-8 bg-gray-100 min-h-screen">
+  <h1 class="text-2xl font-bold mb-6">QR Scanner & Attendance</h1>
+
+  <!-- QR Scanner Section -->
+  <section class="bg-white p-6 rounded-xl shadow-md mb-8">
+    <h2 class="text-xl font-semibold mb-4">Scan QR</h2>
+    <div id="qr-reader" class="w-full max-w-lg mx-auto border border-gray-300 rounded-lg overflow-hidden"></div>
+    <p id="scanMessage" class="mt-2 text-gray-700 font-medium text-center">Select an event first.</p>
+  </section>
+
+  <!-- Events List Section -->
+  <section class="bg-white p-6 rounded-xl shadow-md mb-8">
+    <h2 class="text-xl font-semibold mb-4">My Events</h2>
+    <div id="eventsList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <% createdEvents.forEach(event => { %>
+        <button 
+          class="eventButton bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+          data-event-id="<%= event._id %>"
+        >
+          <%= event.name %> - <%= event.dateFormatted %>
+        </button>
+      <% }) %>
+    </div>
+  </section>
+
+  <!-- Attendance Table -->
+  <section id="attendanceSection" class="mt-8 hidden bg-white p-6 rounded-xl shadow-md">
+    <h2 class="text-xl font-semibold mb-4">Event Attendance</h2>
+    <table class="w-full table-auto border border-gray-300">
+      <thead>
+        <tr class="bg-gray-200">
+          <th class="border px-4 py-2">Participant Name</th>
+          <th class="border px-4 py-2">Email</th>
+          <th class="border px-4 py-2">Attendance</th>
+        </tr>
+      </thead>
+      <tbody id="attendanceTableBody"></tbody>
+    </table>
+  </section>
+</main>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.7"></script>
+<script>
+  let selectedEventId = null;
+
+  const scanMessage = document.getElementById("scanMessage");
+  const tbody = document.getElementById("attendanceTableBody");
+
+  // Select event
+  document.querySelectorAll(".eventButton").forEach(btn => {
+    btn.addEventListener("click", () => {
+      selectedEventId = btn.dataset.eventId;
+      scanMessage.innerText = "Event selected. Ready to scan QR.";
+      loadAttendance(selectedEventId);
+    });
+  });
+
+  // Function to load attendance table
+  function loadAttendance(eventId) {
+    fetch(`/event-coordinator/event-attendance/${eventId}`)
+      .then(res => res.json())
+      .then(data => {
+        if(data.success) {
+          tbody.innerHTML = "";
+          data.registrations.forEach(r => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td class="border px-4 py-2">${r.userId ? r.userId.name : "N/A"}</td>
+              <td class="border px-4 py-2">${r.userId ? r.userId.email : "N/A"}</td>
+              <td class="border px-4 py-2 font-bold ${r.status === "attended" ? "text-green-600" : "text-red-600"}">
+                ${r.status === "attended" ? "Present" : "Absent"}
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+          document.getElementById("attendanceSection").classList.remove("hidden");
+        }
+      });
+  }
+
+  // Initialize Html5Qrcode scanner
+  const html5QrCode = new Html5Qrcode("qr-reader");
+
+  html5QrCode.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: { width: 300, height: 300 } },
+    decodedText => {
+      if(!selectedEventId){
+        scanMessage.innerText = "Select an event first!";
+        return;
+      }
+
+      // Send QR + Event ID to backend
+      fetch("/event-coordinator/scan-qr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ qrData: decodedText, eventId: selectedEventId })
+      })
+      .then(res => res.json())
+      .then(data => {
+        scanMessage.innerText = data.message;
+
+        if(data.success){
+          // Refresh attendance table
+          loadAttendance(selectedEventId);
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        scanMessage.innerText = "Error marking attendance.";
+      });
+    },
+    errorMessage => {
+      // ignore minor scan errors
+    }
+  ).catch(err => {
+    console.error("Unable to start camera:", err);
+    scanMessage.innerText = "Camera not accessible. Check permissions.";
+  });
+</script>

@@ -2,18 +2,20 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const router = express.Router();
 
-const User = require("../models/user");
-const Admin = require("../models/admin");
-const Faculty = require("../models/faculty");
+const User = require("../models/User");
+const Admin = require("../models/Admin");
+const Faculty = require("../models/Faculty");
 const EventCoordinator = require("../models/eventCoordinator");
 
-// Render login page
+// =========================
+// Render Pages
+// =========================
 router.get("/login", (req, res) => res.render("login"));
-
-// Render register page for students
 router.get("/register", (req, res) => res.render("register"));
 
-// Handle student registration
+// =========================
+// Student Registration
+// =========================
 router.post("/register", async (req, res) => {
   const {
     name,
@@ -25,23 +27,33 @@ router.post("/register", async (req, res) => {
     semester,
     department,
     isCollegeStudent,
-    college,
+    college, // only used if external student
   } = req.body;
 
-  if (password !== confirmPassword) return res.send("Passwords do not match");
+  if (password !== confirmPassword) {
+    return res.send("Passwords do not match");
+  }
 
   try {
-    // Check if user already exists
+    // Check duplicate email
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.send("User already exists");
 
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Normalize belongsToCollege & collegeName
-    const belongsToCollege = isCollegeStudent === "yes" ? "yes" : "no";
-    const otherCollegeName = isCollegeStudent === "no" ? college : null;
+    // Decide college name
+    let collegeName = "SNGCE"; // default
+    let belongsToCollege = "yes";
+    let otherCollegeName = null;
 
-    // Create user
+    if (isCollegeStudent === "no") {
+      belongsToCollege = "no";
+      collegeName = college; // take input if external
+      otherCollegeName = college;
+    }
+
+    // Create new user
     await User.create({
       name,
       email,
@@ -51,7 +63,8 @@ router.post("/register", async (req, res) => {
       semester,
       department,
       belongsToCollege,
-      otherCollegeName,
+      college: collegeName, // 🔹 always filled
+      otherCollegeName, // 🔹 only for external students
       role: "user",
     });
 
@@ -62,7 +75,9 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// Login for all roles → role-based redirect
+// =========================
+// Login → role-based redirect
+// =========================
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -70,23 +85,44 @@ router.post("/login", async (req, res) => {
     const users = [
       { model: Admin, role: "admin" },
       { model: Faculty, role: "faculty" },
-      { model: EventCoordinator, role: "eventCoordinator" }, // 👈 camelCase
+      { model: EventCoordinator, role: "eventCoordinator" },
       { model: User, role: "user" },
     ];
 
     for (const u of users) {
       const user = await u.model.findOne({ email });
       if (user && (await bcrypt.compare(password, user.password))) {
+        // Save session
         req.session.user = {
           _id: user._id,
           name: user.name,
           email: user.email,
           role: u.role,
+          department: u.role === "faculty" ? user.department : undefined,
         };
-        return req.session.save(() => res.redirect("/dashboard")); // 👈 single entry point
+
+        // Redirect by role
+        let redirectUrl = "/login";
+        switch (u.role) {
+          case "admin":
+            redirectUrl = "/admin/adminDashboard";
+            break;
+          case "faculty":
+            redirectUrl = "/faculty/dashboard";
+            break;
+          case "eventCoordinator":
+            redirectUrl = "/event-coordinator/dashboard";
+            break;
+          case "user":
+            redirectUrl = "/user/dashboard";
+            break;
+        }
+
+        return req.session.save(() => res.redirect(redirectUrl));
       }
     }
 
+    // Invalid login
     res.send("Invalid email or password");
   } catch (err) {
     console.error("Login error:", err);
@@ -94,7 +130,9 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// =========================
 // Logout
+// =========================
 router.get("/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/login"));
 });

@@ -1,83 +1,96 @@
 const express = require("express");
 const router = express.Router();
 const Event = require("../models/Event");
+const Registration = require("../models/Registration");
+const User = require("../models/user");
+let Feedback;
 
-// Middleware to check login
-function isLoggedIn(req, res, next) {
-  if (req.session.user) return next();
-  return res.redirect("/login");
+try {
+  Feedback = require("../models/Feedback");
+} catch (err) {
+  console.warn("Feedback model not found, skipping feedback count");
 }
 
-// GET /dashboard
+// Middleware: ensure logged in
+function isLoggedIn(req, res, next) {
+  if (req.session.user) return next();
+  res.redirect("/login");
+}
+
+// Render User Dashboard logic
+async function renderUserDashboard(req, res) {
+  try {
+    const user = req.session.user;
+    const events = await Event.find({ status: "approved" }).sort({ date: 1 });
+
+    const registeredCount = await Registration.countDocuments({
+      userId: user._id,
+    });
+    const today = new Date();
+    const upcomingCount = await Event.countDocuments({
+      status: "approved",
+      date: { $gte: today },
+    });
+
+    let feedbackCount = 0;
+    if (Feedback)
+      feedbackCount = await Feedback.countDocuments({ userId: user._id });
+
+    res.render("user/dashboard", {
+      user,
+      events,
+      registeredCount,
+      upcomingCount,
+      feedbackCount,
+    });
+  } catch (err) {
+    console.error("User dashboard error:", err);
+    res.status(500).send("Error loading dashboard");
+  }
+}
+
+// MAIN DASHBOARD ROUTE
 router.get("/", isLoggedIn, async (req, res) => {
   try {
-    const user = req.session.user;
+    const sessionUser = req.session.user;
+    const user = await User.findById(sessionUser._id);
 
-    if (user.role === "user") {
-      const events = await Event.find({ status: "approved" }).sort({ date: 1 });
-      return res.render("user/userDashboard", { user, events });
+    if (!user && sessionUser.role !== "admin") return res.redirect("/login");
+
+    // ---------- Admin ----------
+    if (sessionUser.role === "admin") {
+      const events = await Event.find().sort({ date: -1 });
+      return res.render("admin/adminDashboard", { admin: sessionUser, events });
     }
 
-    if (user.role === "faculty") {
-      const events = await Event.find({ status: "approved" }).sort({ date: 1 });
-      const stats = {
-        draftCount: await Event.countDocuments({ status: "draft" }),
-        approvedCount: await Event.countDocuments({ status: "approved" }),
-        rejectedCount: await Event.countDocuments({ status: "rejected" }),
-      };
-      return res.render("faculty/facultyDashboard", {
-        faculty: user,
+    // ---------- Faculty ----------
+    if (sessionUser.role === "faculty") {
+      const events = await Event.find({
+        department: sessionUser.department,
+      }).sort({
+        date: -1,
+      });
+      return res.render("faculty/dashboard", { user: sessionUser, events });
+    }
+
+    // ---------- Event Coordinator ----------
+    if (sessionUser.role === "eventCoordinator") {
+      const events = await Event.find({ coordinator: sessionUser._id }).sort({
+        date: -1,
+      });
+      return res.render("eventCoordinator/dashboard", {
+        user: sessionUser,
         events,
-        stats,
       });
     }
 
-    if (user.role === "eventCoordinator") {
-      const events = await Event.find({ status: "approved" }).sort({ date: 1 });
-      return res.render("eventCoordinator/eventCoordinatorDashboard", {
-        coordinator: user, // ✅ now matches your EJS include
-        events,
-      });
+    // ---------- Normal User ----------
+    if (sessionUser.role === "user") {
+      return renderUserDashboard(req, res);
     }
-
-    if (user.role === "admin") {
-      return res.redirect("/admin/adminDashboard");
-    }
-
-    return res.status(403).send("Role not recognized");
   } catch (err) {
     console.error("Dashboard error:", err);
-    return res.status(500).send("Error loading dashboard.");
-  }
-});
-
-// GET /dashboard/eventDetails/:id
-router.get("/eventDetails/:id", isLoggedIn, async (req, res) => {
-  try {
-    const user = req.session.user;
-    const event = await Event.findById(req.params.id);
-    if (!event) return res.status(404).send("Event not found");
-
-    if (user.role === "user") {
-      return res.render("user/eventDetails", { user, event });
-    }
-    if (user.role === "faculty") {
-      return res.render("faculty/eventDetails", { faculty: user, event });
-    }
-    if (user.role === "eventCoordinator") {
-      return res.render("eventCoordinator/eventDetails", {
-        coordinator: user, // ✅ consistent naming
-        event,
-      });
-    }
-    if (user.role === "admin") {
-      return res.redirect(`/admin/eventDetails/${event._id}`);
-    }
-
-    return res.status(403).send("Access denied");
-  } catch (err) {
-    console.error(err);
-    return res.status(500).send("Error loading event details.");
+    res.status(500).send("Server error");
   }
 });
 

@@ -15,13 +15,9 @@
     <a href="/user/dashboard" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition duration-200">
       🏠 <span class="ml-3">Dashboard</span>
     </a>
-    <a href="/register" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition duration-200">
-      📝 <span class="ml-3">Registration</span>
-    </a>
     <a href="/user/events" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition duration-200">
       📅 <span class="ml-3">Events</span>
     </a>
-    <!-- Added My Registrations -->
     <a href="/user/my-registrations" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition duration-200">
       ✅ <span class="ml-3">My Registrations</span>
     </a>
@@ -31,49 +27,56 @@
   </nav>
 </aside>
 
+<!-- Main Content -->
+<main class="ml-60 p-6">
+  <!-- Header -->
+  <div class="bg-white shadow rounded-lg px-6 py-4 flex justify-between items-center">
+    <h1 class="text-xl font-semibold">Welcome, <%= user?.name || "User" %></h1>
+    <div class="relative group">
+      <button class="flex items-center space-x-2 focus:outline-none">
+        <img src="https://i.pravatar.cc/40?u=<%= user?.email || 'default' %>" alt="User" class="w-10 h-10 rounded-full border">
+        <span class="hidden md:inline font-medium"><%= user?.name || "User" %></span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </button>
 
-  <!-- Main Content -->
-  <main class="ml-60 p-6">
-    <!-- Header -->
-    <div class="bg-white shadow rounded-lg px-6 py-4 flex justify-between items-center">
-      <h1 class="text-xl font-semibold">Welcome, <%= user.name %></h1>
-      <div class="relative group">
-        <button class="flex items-center space-x-2 focus:outline-none">
-          <img src="https://i.pravatar.cc/40?img=5" alt="User" class="w-10 h-10 rounded-full border">
-          <span class="hidden md:inline font-medium"><%= user.name %></span>
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-          </svg>
-        </button>
-
-        <!-- Dropdown -->
-        <div class="absolute right-0 mt-2 w-48 bg-gray-800 text-gray-200 rounded-lg shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition">
-          <a href="/user/profile" class="block px-4 py-2 text-sm hover:bg-gray-700">Profile</a>
-          <a href="/logout" class="block px-4 py-2 text-sm text-red-400 hover:bg-gray-700">Logout</a>
-        </div>
+      <!-- Dropdown -->
+      <div class="absolute right-0 mt-2 w-48 bg-gray-800 text-gray-200 rounded-lg shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition">
+        <a href="/user/profile" class="block px-4 py-2 text-sm hover:bg-gray-700">👤 Profile</a>
+        <a href="/user/change-password" class="block px-4 py-2 text-sm hover:bg-gray-700">🔑 Change Password</a>
+        <a href="/logout" class="block px-4 py-2 text-sm text-red-400 hover:bg-gray-700">🚪 Logout</a>
       </div>
     </div>
+  </div>
 
-    <!-- Dashboard Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
-      <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
-        <h3 class="text-lg font-semibold mb-2">Registered Events</h3>
-        <p class="text-gray-500">5 events registered</p>
-      </div>
-      <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
-        <h3 class="text-lg font-semibold mb-2">Upcoming Events</h3>
-        <p class="text-gray-500">2 events scheduled</p>
-      </div>
-      <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
-        <h3 class="text-lg font-semibold mb-2">Feedback Submitted</h3>
-        <p class="text-gray-500">3 feedbacks this week</p>
-      </div>
-      <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
-        <h3 class="text-lg font-semibold mb-2">Profile Status</h3>
-        <p class="text-gray-500">Complete</p>
-      </div>
+  <!-- Dashboard Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+    <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+      <h3 class="text-lg font-semibold mb-2">Registered Events</h3>
+      <p class="text-gray-500"><%= typeof registeredCount !== "undefined" ? registeredCount : 0 %> events registered</p>
     </div>
-  </main>
+
+    <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+      <h3 class="text-lg font-semibold mb-2">Upcoming Events</h3>
+      <p class="text-gray-500"><%= typeof upcomingCount !== "undefined" ? upcomingCount : 0 %> events scheduled</p>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+      <h3 class="text-lg font-semibold mb-2">Feedback Submitted</h3>
+      <p class="text-gray-500"><%= typeof feedbackCount !== "undefined" ? feedbackCount : 0 %> feedbacks</p>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+      <h3 class="text-lg font-semibold mb-2">Profile Status</h3>
+      <% if(user?.department && user?.semester && user?.mobile){ %>
+        <p class="text-green-600 font-medium">✅ Complete</p>
+      <% } else { %>
+        <p class="text-red-500 font-medium">⚠️ Incomplete</p>
+      <% } %>
+    </div>
+  </div>
+</main>
 
 </body>
 </html>

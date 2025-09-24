@@ -1,0 +1,55 @@
+<%- include("../partials/eventCoordinatorHeader", { coordinator: coordinator }) %>
+
+<div class="max-w-5xl mx-auto bg-white shadow-lg rounded-lg p-6">
+  <h2 class="text-2xl font-bold mb-6">My Events</h2>
+
+  <% if (!events || events.length === 0) { %>
+    <p class="text-gray-600">You have not created any events yet.</p>
+  <% } else { %>
+    <ul class="space-y-4">
+      <% events.forEach(event => { %>
+        <li class="border p-4 rounded-lg bg-gray-50">
+          <h3 class="text-xl font-semibold"><%= event.name %></h3>
+          <p class="text-gray-700"><%= event.description || "No description provided." %></p>
+          <p class="text-sm text-gray-500 mt-1">
+            Date: <%= event.date %> | Time: <%= event.time %> | Venue: <%= event.venue %>
+          </p>
+          <p class="text-sm text-gray-500">Reg Fee: ₹<%= event.regFee %></p>
+          <p class="text-sm text-gray-500">Participants: <%= event.participants %></p>
+          <p class="text-sm text-gray-500">Contact: <%= event.contactInfo %></p>
+
+          <!-- Status -->
+          <p class="mt-2 font-semibold">
+            Status: 
+            <% if (event.status === "approved") { %>
+              <span class="text-green-600">Approved ✅</span>
+            <% } else if (event.status === "rejected") { %>
+              <span class="text-red-600">Rejected ❌</span>
+            <% } else { %>
+              <span class="text-yellow-600">Pending ⏳</span>
+            <% } %>
+          </p>
+
+          <!-- Show rejection reason -->
+          <% if (event.status === "rejected" && event.rejectionNote) { %>
+            <p class="mt-2 text-sm text-red-700 bg-red-100 p-2 rounded">
+              <strong>Rejection Reason:</strong> <%= event.rejectionNote %>
+            </p>
+          <% } %>
+
+          <!-- Show notifications -->
+          <% if (event.notifications && event.notifications.length > 0) { %>
+            <div class="mt-2">
+              <h4 class="font-semibold">Notifications:</h4>
+              <ul class="list-disc list-inside text-sm text-gray-700">
+                <% event.notifications.forEach(note => { %>
+                  <li><%= note.message %> (<%= new Date(note.createdAt).toLocaleString() %>)</li>
+                <% }) %>
+              </ul>
+            </div>
+          <% } %>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+</div>

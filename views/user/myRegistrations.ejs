@@ -9,17 +9,41 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <% registrations.forEach(reg => { %>
         <div class="bg-white p-6 rounded-xl shadow-md">
-          
+
           <% if (reg.eventId) { %>
-            <!-- Event exists -->
             <h2 class="text-xl font-semibold mb-2"><%= reg.eventId.name %></h2>
             <p class="mb-1"><strong>Date:</strong> <%= reg.eventId.date %></p>
+            <p class="mb-1"><strong>Time:</strong> <%= reg.eventId.time %></p>
             <p class="mb-1"><strong>Venue:</strong> <%= reg.eventId.venue %></p>
+
             <p class="mb-1"><strong>Payment:</strong> 
               <% if (reg.paymentStatus === "paid") { %>
                 <span class="text-green-600 font-bold">Paid</span>
               <% } else { %>
                 <span class="text-red-600 font-bold">Pending</span>
+              <% } %>
+            </p>
+
+           <% if (reg.qrCode) { %>
+  <div class="mt-2">
+    <p class="font-semibold">Your Ticket (QR):</p>
+    <img id="qr-<%= reg._id %>" src="<%= reg.qrCode %>" alt="QR Code for <%= reg.eventId.name %>" class="w-40 h-40 mt-1">
+
+    <!-- Download Button -->
+    <a href="<%= reg.qrCode %>" download="Ticket_<%= reg.eventId.name %>.png"
+       class="mt-2 inline-block bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+       Download QR
+    </a>
+  </div>
+<% } %>
+
+
+            <p class="mt-2">
+              <strong>Attendance Status:</strong> 
+              <% if (reg.status === "attended") { %>
+                <span class="text-green-600 font-bold">Attended</span>
+              <% } else { %>
+                <span class="text-gray-600 font-bold">Registered</span>
               <% } %>
             </p>
 
@@ -31,7 +55,6 @@
             <% } %>
 
           <% } else { %>
-            <!-- Event was deleted -->
             <h2 class="text-xl font-semibold mb-2 text-red-500">Event Deleted</h2>
             <p class="text-gray-500">This event is no longer available.</p>
           <% } %>

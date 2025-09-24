@@ -30,49 +30,44 @@
     </nav>
   </aside>
 
-  <!-- Main content -->
-  <main class="ml-60 p-6">
-    <!-- Topbar -->
-    <div class="bg-white shadow rounded-lg px-6 py-4 flex justify-between items-center">
-      <h1 class="text-xl font-semibold">Dashboard</h1>
-      <div class="relative group">
-        <button class="flex items-center space-x-2 focus:outline-none">
-          <img src="https://i.pravatar.cc/40?img=3" alt="Admin" class="w-10 h-10 rounded-full border">
-          <span class="hidden md:inline font-medium">Admin</span>
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-              d="M19 9l-7 7-7-7"></path>
-          </svg>
-        </button>
+  <!-- Topbar -->
+  <div class="ml-60 bg-white shadow rounded-lg px-6 py-4 flex justify-between items-center">
+    <h1 class="text-xl font-semibold">Dashboard</h1>
+    <div class="relative group">
+      <button class="flex items-center space-x-2 focus:outline-none">
+        <img src="https://i.pravatar.cc/40?img=3" alt="Admin" class="w-10 h-10 rounded-full border">
+        <span class="hidden md:inline font-medium"><%= admin?.name || "Admin" %></span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </button>
 
-        <!-- Dropdown -->
-        <div class="absolute right-0 mt-2 w-48 bg-gray-800 text-gray-200 rounded-lg shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition">
-          <a href="/admin/profile" class="block px-4 py-2 text-sm hover:bg-gray-700">Profile</a>
-          <a href="/logout" class="block px-4 py-2 text-sm text-red-400 hover:bg-gray-700">Logout</a>
-        </div>
+      <!-- Dropdown -->
+      <div class="absolute right-0 mt-2 w-48 bg-gray-800 text-gray-200 rounded-lg shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition">
+        <a href="/admin/profile" class="block px-4 py-2 text-sm hover:bg-gray-700">Profile</a>
+        <a href="/logout" class="block px-4 py-2 text-sm text-red-400 hover:bg-gray-700">Logout</a>
       </div>
     </div>
+  </div>
 
-    <!-- Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
-      <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
-        <h3 class="text-lg font-semibold mb-2">Total Users</h3>
-        <p class="text-gray-500">1,245 active users</p>
-      </div>
-      <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
-        <h3 class="text-lg font-semibold mb-2">Revenue</h3>
-        <p class="text-gray-500">$45,320 this month</p>
-      </div>
-      <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
-        <h3 class="text-lg font-semibold mb-2">New Orders</h3>
-        <p class="text-gray-500">320 pending orders</p>
-      </div>
-      <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
-        <h3 class="text-lg font-semibold mb-2">Server Status</h3>
-        <p class="text-gray-500">All systems running smoothly</p>
-      </div>
+  <!-- Stats Cards -->
+  <div class="ml-60 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6 px-4 md:px-8">
+    <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+      <h3 class="text-lg font-semibold mb-2">Total Users</h3>
+      <p class="text-gray-500"><%= stats?.totalUsers || 0 %> active users</p>
     </div>
-  </main>
-
-</body>
-</html>
+    <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+      <h3 class="text-lg font-semibold mb-2">Total Events</h3>
+      <p class="text-gray-500"><%= stats?.totalEvents || 0 %></p>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+      <h3 class="text-lg font-semibold mb-2">Faculty Assigned</h3>
+      <p class="text-gray-500"><%= stats?.totalFaculty || 0 %></p>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+      <h3 class="text-lg font-semibold mb-2">Live Events</h3>
+      <p class="text-gray-500">
+        <%= events?.filter(event => new Date(event.date) >= new Date()).length || 0 %>
+      </p>
+    </div>
+  </div>

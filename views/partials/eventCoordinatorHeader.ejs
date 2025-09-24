@@ -9,7 +9,7 @@
 <body class="bg-gray-100 text-gray-800">
 
   <!-- Sidebar -->
-  <aside class="fixed inset-y-0 left-0 w-60 bg-gray-900 text-gray-200 flex flex-col py-6">
+  <aside class="fixed inset-y-0 left-0 w-60 bg-gray-900 text-gray-200 flex flex-col py-6 hidden sm:flex">
     <h2 class="text-center text-2xl font-bold text-white mb-8">Event Coordinator</h2>
     <nav class="flex-1 space-y-2">
       <a href="/event-coordinator/dashboard" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition">
@@ -21,52 +21,63 @@
       <a href="/event-coordinator/tasks" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition">
         🎯 <span class="ml-3">Tasks</span>
       </a>
-      <!-- ✅ New Create Event Link -->
       <a href="/event-coordinator/create-event" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition">
         ✨ <span class="ml-3">Create Event</span>
+      </a>
+      <a href="/event-coordinator/scan-qr" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition">
+        📲 <span class="ml-3">Scan Attendance</span>
       </a>
     </nav>
   </aside>
 
   <!-- Main content -->
-  <main class="ml-60 p-6">
+  <main class="sm:ml-60 p-4 sm:p-6">
+
     <!-- Topbar -->
-    <div class="bg-white shadow rounded-lg px-6 py-4 flex justify-between items-center">
-      <h1 class="text-xl font-semibold">Welcome, <%= coordinator.name %></h1>
-      <div class="relative group">
-        <button class="flex items-center space-x-2 focus:outline-none">
-          <svg class="w-10 h-10 rounded-full bg-gray-700 p-1 text-gray-200" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 
-              1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 
-              1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-          </svg>
-          <span class="hidden md:inline font-medium"><%= coordinator.name %></span>
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-              d="M19 9l-7 7-7-7"></path>
-          </svg>
-        </button>
-        <div class="absolute right-0 mt-2 w-48 bg-gray-800 text-gray-200 rounded-lg shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition">
-          <a href="/logout" class="block px-4 py-2 text-sm text-red-400 hover:bg-gray-700">Logout</a>
+    <div class="bg-white shadow rounded-lg px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-0">
+      <!-- Welcome Message -->
+      <h1 class="text-lg sm:text-xl font-semibold text-gray-800">
+        Welcome, <%= coordinator.name %>
+      </h1>
+
+      <!-- Right section: Scan button & Profile -->
+      <div class="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto justify-end">
+        <!-- Scan Attendance Button -->
+        <a href="/event-coordinator/scan-qr" 
+           class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm sm:text-base w-full sm:w-auto text-center">
+           📲 Scan Attendance
+        </a>
+
+        <!-- Profile Dropdown -->
+        <div class="relative group w-full sm:w-auto">
+          <button class="flex items-center justify-between w-full sm:w-auto px-2 py-1 focus:outline-none bg-gray-100 rounded-md">
+            <div class="flex items-center space-x-2">
+              <svg class="w-8 h-8 rounded-full bg-gray-700 p-1 text-gray-200" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 
+                  1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 
+                  1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+              </svg>
+              <span class="font-medium hidden sm:inline"><%= coordinator.name %></span>
+            </div>
+            <svg class="w-4 h-4 hidden sm:inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+
+          <!-- Dropdown Menu -->
+          <div class="absolute right-0 mt-2 w-full sm:w-48 bg-gray-800 text-gray-200 rounded-lg shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition">
+            <a href="/logout" class="block px-4 py-2 text-sm text-red-400 hover:bg-gray-700">Logout</a>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Content Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-      <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
-        <h3 class="text-lg font-semibold mb-2">My Events</h3>
-        <p class="text-gray-500">View and manage your assigned events.</p>
-      </div>
-      <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
-        <h3 class="text-lg font-semibold mb-2">Tasks</h3>
-        <p class="text-gray-500">Track your daily tasks and responsibilities.</p>
-      </div>
-      <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
-        <h3 class="text-lg font-semibold mb-2">Profile</h3>
-        <p class="text-gray-500">Update your personal information.</p>
-      </div>
+    <!-- Page Content Here -->
+    <div class="mt-6">
+      <h2 class="text-2xl font-bold mb-4">Dashboard Content</h2>
+      <!-- Add your page content here -->
     </div>
+
   </main>
 
 </body>

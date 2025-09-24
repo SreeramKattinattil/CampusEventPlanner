@@ -40,13 +40,25 @@ const registrationSchema = new mongoose.Schema(
     razorpayOrderId: { type: String, default: null },
     razorpayPaymentId: { type: String, default: null },
     razorpaySignature: { type: String, default: null },
+    qrCode: { type: String, default: null }, // ✅ QR code generated before payment
+    status: {
+      type: String,
+      enum: ["registered", "attended"],
+      default: "registered",
+    },
   },
   { timestamps: true }
 );
 
-// Optional: helper method to check if registration is single-participant
+// Helper method: single participant
 registrationSchema.methods.isSingleParticipant = function () {
   return this.participants.length === 1;
+};
+
+// Helper method: mark attendance
+registrationSchema.methods.markAttended = function () {
+  this.status = "attended";
+  return this.save();
 };
 
 module.exports = mongoose.model("Registration", registrationSchema);
