@@ -5,7 +5,7 @@ const router = express.Router();
 const EventCoordinator = require("../models/eventCoordinator");
 const Event = require("../models/Event");
 
-// Middleware: check faculty login
+// Middleware: Protect faculty routes
 function isFaculty(req, res, next) {
   if (req.session.user && req.session.user.role === "faculty") return next();
   res.redirect("/login");
@@ -13,18 +13,11 @@ function isFaculty(req, res, next) {
 
 // Helper: get event stats
 async function getStats(facultyId) {
-  const draftCount = await Event.countDocuments({
-    status: "draft",
-    assignedFaculty: facultyId,
-  });
-  const approvedCount = await Event.countDocuments({
-    status: "approved",
-    assignedFaculty: facultyId,
-  });
-  const rejectedCount = await Event.countDocuments({
-    status: "rejected",
-    assignedFaculty: facultyId,
-  });
+  const [draftCount, approvedCount, rejectedCount] = await Promise.all([
+    Event.countDocuments({ status: "draft", assignedFaculty: facultyId }),
+    Event.countDocuments({ status: "approved", assignedFaculty: facultyId }),
+    Event.countDocuments({ status: "rejected", assignedFaculty: facultyId }),
+  ]);
   return { draftCount, approvedCount, rejectedCount };
 }
 
@@ -45,7 +38,7 @@ router.get("/dashboard", isFaculty, async (req, res) => {
 
     res.render("faculty/facultyDashboard", { faculty, stats, events });
   } catch (err) {
-    console.error(err);
+    console.error("Dashboard error:", err);
     res.status(500).send("Server Error");
   }
 });
@@ -65,11 +58,7 @@ router.get("/pending-events", isFaculty, async (req, res) => {
 
     const stats = await getStats(faculty._id);
 
-    res.render("faculty/pendingEvents", {
-      faculty,
-      events,
-      stats,
-    });
+    res.render("faculty/pendingEvents", { faculty, events, stats });
   } catch (err) {
     console.error("Error fetching pending events:", err);
     res.status(500).send("Error fetching pending events.");
@@ -95,26 +84,25 @@ router.post("/approve/:id", isFaculty, async (req, res) => {
 
     res.redirect("/faculty/pending-events");
   } catch (err) {
-    console.error(err);
+    console.error("Approve event error:", err);
     res.status(500).send("Error approving event.");
   }
 });
 
 /* ===========================================================
-   REJECT EVENT (with reason)
+   REJECT EVENT
 =========================================================== */
 router.post("/reject/:id", isFaculty, async (req, res) => {
   try {
     const faculty = req.session.user;
-    const { reason } = req.body; // reason comes from form
+    const { reason } = req.body;
 
-    if (!reason || reason.trim() === "") {
+    if (!reason || reason.trim() === "")
       return res.send("Rejection reason is required.");
-    }
 
     await Event.findByIdAndUpdate(req.params.id, {
       status: "rejected",
-      rejectionNote: reason, // ✅ match schema field
+      rejectionNote: reason,
       $push: {
         notifications: {
           message: `❌ Event rejected by ${faculty.name}. Reason: ${reason}`,
@@ -125,7 +113,7 @@ router.post("/reject/:id", isFaculty, async (req, res) => {
 
     res.redirect("/faculty/pending-events");
   } catch (err) {
-    console.error(err);
+    console.error("Reject event error:", err);
     res.status(500).send("Error rejecting event.");
   }
 });
@@ -141,10 +129,10 @@ router.get("/add-event-coordinator", isFaculty, (req, res) => {
 });
 
 router.post("/add-event-coordinator", isFaculty, async (req, res) => {
-  const { name, email, department, password } = req.body;
-  if (!password) return res.send("Password is required");
-
   try {
+    const { name, email, department, password } = req.body;
+    if (!password) return res.send("Password is required");
+
     const exists = await EventCoordinator.findOne({ email });
     if (exists)
       return res.send("Event coordinator with this email already exists.");
@@ -160,7 +148,7 @@ router.post("/add-event-coordinator", isFaculty, async (req, res) => {
 
     res.redirect("/faculty/event-coordinators");
   } catch (err) {
-    console.error(err);
+    console.error("Add coordinator error:", err);
     res.status(500).send("Error adding coordinator.");
   }
 });
@@ -180,7 +168,7 @@ router.get("/event-coordinators", isFaculty, async (req, res) => {
       stats: {},
     });
   } catch (err) {
-    console.error(err);
+    console.error("List coordinators error:", err);
     res.status(500).send("Error loading coordinators.");
   }
 });

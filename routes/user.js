@@ -6,9 +6,9 @@ const bcrypt = require("bcrypt");
 const User = require("../models/User");
 const Event = require("../models/Event");
 const Registration = require("../models/Registration");
-const EventRegistration = require("../models/EventRegistration");
 const QRCode = require("qrcode");
 const Transaction = require("../models/Transaction");
+
 // Razorpay instance
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -41,13 +41,10 @@ router.get("/dashboard", isUser, async (req, res) => {
       date: { $gte: today },
     });
 
-    let feedbackCount = 0;
-    try {
-      const Feedback = require("../models/Feedback");
-      feedbackCount = await Feedback.countDocuments({ userId: user._id });
-    } catch (err) {
-      console.warn("Feedback model not found, skipping feedback count");
-    }
+    const feedbackCount = await Registration.countDocuments({
+      userId: user._id,
+      "feedback.comment": { $exists: true },
+    });
 
     res.render("user/dashboard", {
       user,
@@ -90,7 +87,6 @@ router.get("/event/:id", isUser, async (req, res) => {
 /* ===========================================================
    REGISTER FOR EVENT
 =========================================================== */
-
 router.post("/event/:id/register", isUser, async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
@@ -99,18 +95,16 @@ router.post("/event/:id/register", isUser, async (req, res) => {
 
     const userId = req.session.user._id;
 
-    // Check if user already registered
     const existingReg = await Registration.findOne({
       eventId: event._id,
       userId,
     });
     if (existingReg) return res.redirect(`/user/event/${event._id}/payment`);
 
-    // Prepare participants data
     let participants = req.body.participants;
     if (!Array.isArray(participants)) participants = [participants];
 
-    participants = participants.map((p, index) => ({
+    participants = participants.map((p) => ({
       name: p.name?.trim(),
       email: p.email?.trim(),
       mobNo: p.mobNo?.trim(),
@@ -120,7 +114,6 @@ router.post("/event/:id/register", isUser, async (req, res) => {
       semester: p.semester?.trim(),
     }));
 
-    // Create new registration
     const registration = new Registration({
       eventId: event._id,
       userId,
@@ -128,22 +121,16 @@ router.post("/event/:id/register", isUser, async (req, res) => {
       paymentStatus: "pending",
     });
 
-    // ✅ Generate QR code for entire registration (could include all participants)
-    // If you want individual QR per participant, you can loop over participants
-    // Here we generate one QR code for the registration
     const qrData = {
       registrationId: registration._id,
       eventId: event._id,
       userId,
       participants: participants.map((p) => ({ name: p.name, email: p.email })),
     };
-
     registration.qrCode = await QRCode.toDataURL(JSON.stringify(qrData));
 
-    // Save registration with QR code
     await registration.save();
 
-    // Save registration ID in session for payment
     if (!req.session.registrations) req.session.registrations = {};
     req.session.registrations[event._id] = registration._id;
 
@@ -214,8 +201,8 @@ router.post("/event/:id/payment-success", isUser, async (req, res) => {
       razorpayOrderId,
       razorpaySignature,
     });
-    delete req.session.registrations[req.params.id];
 
+    delete req.session.registrations[req.params.id];
     res.redirect("/user/dashboard");
   } catch (err) {
     console.error("Payment update error:", err);
@@ -224,7 +211,7 @@ router.post("/event/:id/payment-success", isUser, async (req, res) => {
 });
 
 /* ===========================================================
-   VIEW MY REGISTRATIONS
+   VIEW MY REGISTRATIONS + SUBMIT FEEDBACK
 =========================================================== */
 router.get("/my-registrations", isUser, async (req, res) => {
   try {
@@ -241,6 +228,39 @@ router.get("/my-registrations", isUser, async (req, res) => {
   } catch (err) {
     console.error("My Registrations error:", err);
     res.status(500).send("Server Error");
+  }
+});
+
+// Submit feedback (single, streamlined route)
+router.post("/registration/:id/feedback", isUser, async (req, res) => {
+  try {
+    const { comment } = req.body;
+    const registration = await Registration.findById(req.params.id).populate(
+      "eventId"
+    );
+
+    if (!registration) return res.status(404).send("Registration not found");
+
+    // Only allow feedback if user has paid and attended
+    if (
+      registration.userId.toString() !== req.session.user._id.toString() ||
+      registration.paymentStatus !== "paid" ||
+      registration.status !== "attended"
+    ) {
+      return res
+        .status(403)
+        .send(
+          "You are not authorized to submit feedback for this registration."
+        );
+    }
+
+    registration.feedback = { comment: comment.trim() };
+    await registration.save();
+
+    res.redirect("/user/my-registrations");
+  } catch (err) {
+    console.error("Feedback submission error:", err);
+    res.status(500).send("Error submitting feedback");
   }
 });
 
@@ -345,9 +365,9 @@ router.post("/change-password", async (req, res) => {
 =========================================================== */
 router.get("/myEvents", isUser, async (req, res) => {
   try {
-    const registrations = await EventRegistration.find({
-      user: req.session.user._id,
-    }).populate("event");
+    const registrations = await Registration.find({
+      userId: req.session.user._id,
+    }).populate("eventId");
     res.render("user/myEvents", { user: req.session.user, registrations });
   } catch (err) {
     console.error("My Events error:", err);
@@ -364,11 +384,11 @@ router.post("/register/:eventId", isUser, async (req, res) => {
 
     const transaction = await Transaction.create({
       event: event._id,
-      coordinator: event.createdBy, // event coordinator
-      user: req.session.user._id, // logged-in student
+      coordinator: event.createdBy,
+      user: req.session.user._id,
       amount: event.regFee,
       paymentMethod: req.body.paymentMethod || "online",
-      status: "success", // later you can connect with Razorpay/Stripe
+      status: "success",
     });
 
     res.redirect(`/events/${event._id}/success`);

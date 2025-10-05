@@ -4,7 +4,9 @@ const bcrypt = require("bcrypt");
 const Faculty = require("../models/Faculty");
 const User = require("../models/User");
 const Event = require("../models/Event");
+const Registration = require("../models/Registration");
 
+const Transaction = require("../models/Transaction");
 // ================= Middleware =================
 function isAdmin(req, res, next) {
   if (req.session.user && req.session.user.role === "admin") return next();
@@ -25,14 +27,28 @@ async function getAdminHeaderData() {
   return { stats, events };
 }
 
-// ================= DASHBOARD =================
 router.get("/adminDashboard", isAdmin, async (req, res) => {
   try {
     const { stats, events } = await getAdminHeaderData();
+
+    // Latest 5 feedbacks from registrations (only proper objects)
+    const feedbacks = await Registration.find({
+      feedback: { $exists: true, $type: "object" },
+    })
+      .populate("userId", "name")
+      .populate("eventId", "name")
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    // All transactions for chart
+    const transactions = await Transaction.find().sort({ createdAt: 1 });
+
     res.render("admin/adminDashboard", {
       admin: req.session.user,
       stats,
       events,
+      feedbacks,
+      transactions,
       searchQuery: req.query.search || "",
     });
   } catch (err) {

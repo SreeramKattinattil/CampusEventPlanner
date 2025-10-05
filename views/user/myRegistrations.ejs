@@ -24,19 +24,16 @@
               <% } %>
             </p>
 
-           <% if (reg.qrCode) { %>
-  <div class="mt-2">
-    <p class="font-semibold">Your Ticket (QR):</p>
-    <img id="qr-<%= reg._id %>" src="<%= reg.qrCode %>" alt="QR Code for <%= reg.eventId.name %>" class="w-40 h-40 mt-1">
-
-    <!-- Download Button -->
-    <a href="<%= reg.qrCode %>" download="Ticket_<%= reg.eventId.name %>.png"
-       class="mt-2 inline-block bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-       Download QR
-    </a>
-  </div>
-<% } %>
-
+            <% if (reg.qrCode) { %>
+              <div class="mt-2">
+                <p class="font-semibold">Your Ticket (QR):</p>
+                <img src="<%= reg.qrCode %>" alt="QR Code for <%= reg.eventId.name %>" class="w-40 h-40 mt-1">
+                <a href="<%= reg.qrCode %>" download="Ticket_<%= reg.eventId.name %>.png"
+                   class="mt-2 inline-block bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                   Download QR
+                </a>
+              </div>
+            <% } %>
 
             <p class="mt-2">
               <strong>Attendance Status:</strong> 
@@ -52,6 +49,28 @@
                  class="mt-2 inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                 Pay Now
               </a>
+            <% } %>
+
+            <!-- Feedback Form -->
+            <% if (reg.paymentStatus === "paid" && reg.status === "attended") { %>
+              <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h3 class="font-semibold text-gray-700 mb-2">Submit Feedback</h3>
+
+                <% if (reg.feedback) { %>
+                  <p><strong>Comment:</strong> <%= reg.feedback.comment %></p>
+                <% } else { %>
+                  <form action="/user/registration/<%= reg._id %>/feedback" method="POST">
+                    <label class="block mb-1 text-gray-600">Comment:</label>
+                    <textarea name="comment" rows="3" required
+                              class="w-full mb-2 p-2 border border-gray-300 rounded"></textarea>
+
+                    <button type="submit"
+                            class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                      Submit Feedback
+                    </button>
+                  </form>
+                <% } %>
+              </div>
             <% } %>
 
           <% } else { %>

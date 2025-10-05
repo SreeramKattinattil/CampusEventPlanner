@@ -35,14 +35,22 @@ const upload = multer({ storage });
 // =====================
 // Dashboard
 // =====================
+// =====================
+// Dashboard
+// =====================
 router.get("/dashboard", isEventCoordinator, async (req, res) => {
   try {
     const coordinator = await EventCoordinator.findById(req.session.user._id);
     if (!coordinator) return res.status(404).send("Coordinator not found");
 
+    // Events created by this coordinator
     const createdEvents = await Event.find({ createdBy: coordinator._id }).sort(
-      { date: 1 }
+      {
+        date: 1,
+      }
     );
+
+    // Faculty approved events assigned to this coordinator
     const facultyApprovedEvents = await Event.find({
       assignedFaculty: coordinator.createdBy,
       status: "approved",
@@ -51,14 +59,13 @@ router.get("/dashboard", isEventCoordinator, async (req, res) => {
     const formatEvents = (events) =>
       events.map((e) => ({
         ...e._doc,
-        date: new Date(e.date),
         dateFormatted: new Date(e.date).toDateString(),
       }));
 
     res.render("eventCoordinator/eventCoordinatorDashboard", {
       coordinator,
       createdEvents: formatEvents(createdEvents),
-      facultyApprovedEvents: formatEvents(facultyApprovedEvents),
+      facultyApprovedEvents: formatEvents(facultyApprovedEvents), // ✅ send this to EJS
     });
   } catch (err) {
     console.error("Error loading dashboard:", err);
@@ -108,7 +115,6 @@ router.post(
 
       const savedEvent = await newEvent.save();
 
-      // ✅ Create transaction after event is saved
       await Transaction.create({
         event: savedEvent._id,
         coordinator: coordinator._id,
@@ -127,25 +133,41 @@ router.post(
 );
 
 // =====================
-// Event Details (Registrations)
+// Event Details (Registrations + Feedbacks)
 // =====================
 router.get("/eventDetails/:id", isEventCoordinator, async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).send("Event not found");
 
-    const registrations = await Registration.find({
-      eventId: event._id,
-    }).populate("userId", "name email");
+    // Include user info and feedback
+    const registrations = await Registration.find({ eventId: event._id })
+      .populate("userId", "name email")
+      .sort({ createdAt: -1 });
 
     res.render("eventCoordinator/eventDetails", {
       event,
       registrations,
       coordinator: req.session.user,
+      showFeedback: true, // ✅ flag to show feedback
     });
   } catch (err) {
     console.error("Error loading event details:", err);
     res.status(500).send("Error loading event details");
+  }
+});
+// =====================
+// Create Event Page (GET)
+// =====================
+router.get("/create-event", isEventCoordinator, async (req, res) => {
+  try {
+    const coordinator = await EventCoordinator.findById(req.session.user._id);
+    if (!coordinator) return res.status(404).send("Coordinator not found");
+
+    res.render("eventCoordinator/createEvent", { coordinator });
+  } catch (err) {
+    console.error("Error loading create event page:", err);
+    res.status(500).send("Error loading create event page");
   }
 });
 
@@ -161,14 +183,12 @@ router.get("/scan-qr", isEventCoordinator, async (req, res) => {
       { date: 1 }
     );
 
-    const eventsWithFormattedDate = createdEvents.map((e) => ({
-      ...e._doc,
-      dateFormatted: new Date(e.date).toDateString(),
-    }));
-
     res.render("eventCoordinator/scanAttendance", {
       coordinator,
-      createdEvents: eventsWithFormattedDate,
+      createdEvents: createdEvents.map((e) => ({
+        ...e._doc,
+        dateFormatted: new Date(e.date).toDateString(),
+      })),
     });
   } catch (err) {
     console.error("Scan QR page error:", err);
@@ -191,12 +211,10 @@ router.post("/scan-qr", isEventCoordinator, async (req, res) => {
     }).populate("userId", "name email");
 
     if (!registration) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message: "Registration not found for this event",
-        });
+      return res.status(404).json({
+        success: false,
+        message: "Registration not found for this event",
+      });
     }
 
     if (registration.paymentStatus !== "paid") {
@@ -242,7 +260,10 @@ router.get("/event-attendance/:id", isEventCoordinator, async (req, res) => {
 
     const registrations = await Registration.find({
       eventId: event._id,
-    }).populate("userId", "name email");
+    })
+      .populate("userId", "name email")
+      .sort({ createdAt: -1 });
+
     res.json({ success: true, registrations });
   } catch (err) {
     console.error("Attendance fetch error:", err);
@@ -265,14 +286,12 @@ router.get("/pending-events", isEventCoordinator, async (req, res) => {
       status: { $in: ["draft", "pending", "rejected"] },
     }).sort({ date: 1 });
 
-    const formattedEvents = pendingEvents.map((e) => ({
-      ...e._doc,
-      dateFormatted: new Date(e.date).toDateString(),
-    }));
-
     res.render("eventCoordinator/pendingEvents", {
       coordinator,
-      pendingEvents: formattedEvents,
+      pendingEvents: pendingEvents.map((e) => ({
+        ...e._doc,
+        dateFormatted: new Date(e.date).toDateString(),
+      })),
     });
   } catch (err) {
     console.error("Error fetching pending events:", err);

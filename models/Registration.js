@@ -11,6 +11,13 @@ const participantSchema = new mongoose.Schema({
   semester: { type: String, required: true, trim: true },
 });
 
+// Feedback Schema
+const feedbackSchema = new mongoose.Schema({
+  rating: { type: Number, min: 1, max: 5 },
+  comment: { type: String, trim: true },
+  createdAt: { type: Date, default: Date.now },
+});
+
 // Registration Schema
 const registrationSchema = new mongoose.Schema(
   {
@@ -45,6 +52,10 @@ const registrationSchema = new mongoose.Schema(
       type: String,
       enum: ["registered", "attended"],
       default: "registered",
+    },
+    feedback: {
+      type: feedbackSchema,
+      default: null, // ✅ Ensure feedback is null by default
     },
   },
   { timestamps: true }

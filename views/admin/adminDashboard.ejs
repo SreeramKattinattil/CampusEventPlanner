@@ -1,3 +1,98 @@
-<%- include("../partials/adminHeader", { user: admin, stats: stats, events: events }) %>
+<%- include('../partials/adminHeader', { admin: admin, stats: stats, events: events }) %>
 
+<main class="ml-60 p-6 bg-gray-100 min-h-screen">
 
+  <!-- Charts Section -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <!-- Events per Department -->
+    <div class="bg-white p-6 rounded-lg shadow">
+      <h3 class="text-gray-700 font-semibold mb-4">Events per Department</h3>
+      <canvas id="eventsChart"></canvas>
+    </div>
+
+    <!-- Monthly Transactions -->
+    <div class="bg-white p-6 rounded-lg shadow">
+      <h3 class="text-gray-700 font-semibold mb-4">Monthly Transactions</h3>
+      <canvas id="transactionsChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Recent Feedback Table -->
+  <div class="bg-white p-6 rounded-lg shadow">
+    <h3 class="text-gray-700 font-semibold mb-4">Recent Feedback</h3>
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b border-gray-200">
+            <th class="px-4 py-2 text-gray-500">#</th>
+            <th class="px-4 py-2 text-gray-500">User</th>
+            <th class="px-4 py-2 text-gray-500">Event</th>
+            <th class="px-4 py-2 text-gray-500">Comment</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (feedbacks && feedbacks.length > 0) { %>
+            <% feedbacks.forEach((fb, index) => { %>
+              <tr class="hover:bg-gray-50">
+                <td class="px-4 py-2"><%= index + 1 %></td>
+                <td class="px-4 py-2"><%= fb.userId?.name || 'N/A' %></td>
+                <td class="px-4 py-2"><%= fb.eventId?.name || 'N/A' %></td>
+                <td class="px-4 py-2"><%= fb.feedback?.comment || '-' %></td>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr>
+              <td class="px-4 py-2 text-center" colspan="4">No feedback yet</td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Events per Department Chart
+  const eventsByDept = <%- JSON.stringify(events.reduce((acc, e) => {
+    acc[e.department] = (acc[e.department] || 0) + 1;
+    return acc;
+  }, {})) %>;
+
+  new Chart(document.getElementById('eventsChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: Object.keys(eventsByDept),
+      datasets: [{
+        label: 'Events',
+        data: Object.values(eventsByDept),
+        backgroundColor: '#3B82F6'
+      }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } } }
+  });
+
+  // Monthly Transactions Chart
+  const monthlyTransactions = <%- JSON.stringify(transactions.reduce((acc, t) => {
+    const month = new Date(t.createdAt).toLocaleString('default', { month: 'short' });
+    acc[month] = (acc[month] || 0) + (t.amount || 0);
+    return acc;
+  }, {})) %>;
+
+  new Chart(document.getElementById('transactionsChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: Object.keys(monthlyTransactions),
+      datasets: [{
+        label: 'Transactions ($)',
+        data: Object.values(monthlyTransactions),
+        borderColor: '#10B981',
+        backgroundColor: 'rgba(16,185,129,0.2)',
+        tension: 0.3,
+        fill: true
+      }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } } }
+  });
+</script>
