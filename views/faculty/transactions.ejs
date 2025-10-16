@@ -1,0 +1,68 @@
+<%- include('../partials/facultyHeader', { faculty: faculty }) %>
+
+<main class="ml-0 md:ml-60 p-6 bg-gray-50 min-h-screen">
+  <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-md p-6">
+
+    <h2 class="text-3xl font-semibold mb-6 text-gray-800">Transaction Details</h2>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b border-gray-200">
+            <th class="px-4 py-3 text-sm font-medium text-gray-600">#</th>
+            <th class="px-4 py-3 text-sm font-medium text-gray-600">Event</th>
+            <th class="px-4 py-3 text-sm font-medium text-gray-600">Coordinator</th>
+            <th class="px-4 py-3 text-sm font-medium text-gray-600">Student</th>
+            <th class="px-4 py-3 text-sm font-medium text-gray-600">Amount</th>
+            <th class="px-4 py-3 text-sm font-medium text-gray-600">Payment Method</th>
+            <th class="px-4 py-3 text-sm font-medium text-gray-600">Status</th>
+            <th class="px-4 py-3 text-sm font-medium text-gray-600">Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (!transactions || transactions.length === 0) { %>
+            <tr>
+              <td colspan="8" class="px-4 py-6 text-center text-gray-400 font-medium">
+                No transactions yet.
+              </td>
+            </tr>
+          <% } else { %>
+            <% transactions.forEach((tx, index) => { %>
+              <tr class="hover:bg-gray-50 transition-colors duration-200 border-b border-gray-100">
+                <td class="px-4 py-3 text-gray-700 font-medium"><%= index + 1 %></td>
+                <td class="px-4 py-3 text-gray-800"><%= tx.event ? tx.event.name : '-' %></td>
+                <td class="px-4 py-3 text-gray-800"><%= tx.coordinator ? tx.coordinator.name : '-' %></td>
+                <td class="px-4 py-3 text-gray-800">
+                  <%= tx.user ? tx.user.name : '-' %> <br>
+                  <span class="text-gray-500 text-sm"><%= tx.user ? tx.user.email : '-' %></span> <br>
+                  <span class="text-gray-500 text-sm"><%= tx.user ? tx.user.mobile : '-' %></span>
+                </td>
+                <td class="px-4 py-3 text-gray-800 font-semibold">₹<%= tx.amount %></td>
+                <td class="px-4 py-3 text-gray-800"><%= tx.paymentMethod %></td>
+                <td class="px-4 py-3">
+                  <span class="<%= tx.status === 'success' ? 'text-green-600' : tx.status === 'pending' ? 'text-yellow-600' : 'text-red-600' %> font-semibold">
+                    <%= tx.status %>
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-gray-500 text-sm">
+                  <%= new Date(tx.createdAt).toLocaleString() %>
+                </td>
+              </tr>
+            <% }) %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mt-6">
+      <a href="/faculty/dashboard" class="text-blue-600 hover:underline font-medium">← Back to Dashboard</a>
+    </div>
+  </div>
+</main>
+
+<style>
+  body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f9fafb;
+  }
+</style>

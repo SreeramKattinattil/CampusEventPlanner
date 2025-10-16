@@ -1,9 +1,10 @@
+require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
-require("dotenv").config();
 
+// Routes
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
 const adminRoutes = require("./routes/admin");
@@ -12,20 +13,24 @@ const eventCoordinatorRoutes = require("./routes/eventCoordinator");
 const paymentRoutes = require("./routes/payment");
 const dashboardRoutes = require("./routes/dashboard");
 
+// Utilities
 const createDefaultAdmin = require("./hash");
 
+// Initialize Express
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// =========================
 // Middleware
+// =========================
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// View Engine
-app.set("view engine", "ejs");
-
 // Static files
 app.use("/uploads", express.static("uploads"));
+
+// View engine
+app.set("view engine", "ejs");
 
 // Session setup
 app.use(
@@ -41,7 +46,9 @@ app.use(
   })
 );
 
+// =========================
 // Routes
+// =========================
 app.use("/", authRoutes);
 app.use("/user", userRoutes);
 app.use("/admin", adminRoutes);
@@ -50,19 +57,30 @@ app.use("/event-coordinator", eventCoordinatorRoutes);
 app.use("/payment", paymentRoutes);
 app.use("/dashboard", dashboardRoutes);
 
-// Redirect home
-app.get("/", (req, res) => {
-  res.redirect("/login");
-});
+// Default redirect to login
+app.get("/", (req, res) => res.redirect("/login"));
 
-// MongoDB connect
+// =========================
+// MongoDB Connection
+// =========================
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
     console.log("✅ MongoDB connected");
+
+    // Create default admin if not exists
     createDefaultAdmin();
+
+    // Start server
     app.listen(PORT, () => {
-      console.log(`🚀 Server running at  10.183.121.170:${PORT}`);
+      console.log(`🚀 Server running at http://localhost:${PORT}`);
     });
   })
-  .catch((err) => console.error("❌ MongoDB error:", err));
+  .catch((err) => {
+    console.error("❌ MongoDB connection error:", err);
+  });
+
+// =========================
+// Optional: Start background jobs
+// =========================
+require("./reminderJob"); // Reminder system cron job

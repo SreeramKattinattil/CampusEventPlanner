@@ -1,0 +1,49 @@
+<%- include('../partials/adminHeader', { admin: admin, stats: stats }) %>
+
+<main class="ml-60 p-6 bg-gray-100 min-h-screen">
+  <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold text-gray-800">Approved Events</h2>
+      <form method="GET" action="/admin/approvedEvents" class="flex">
+        <input type="text" name="search" placeholder="Search event..." value="<%= searchQuery || '' %>"
+          class="border border-gray-300 rounded-l-lg px-3 py-2 focus:ring-2 focus:ring-blue-400" />
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-r-lg hover:bg-blue-700">Search</button>
+      </form>
+    </div>
+
+    <% if (!events || events.length === 0) { %>
+      <p class="text-gray-500">No approved events found.</p>
+    <% } else { %>
+      <div class="overflow-x-auto">
+        <table class="min-w-full border border-gray-200 rounded-xl">
+          <thead>
+            <tr class="bg-gray-100 text-gray-700">
+              <th class="p-3 text-left">Event Name</th>
+              <th class="p-3 text-left">Faculty</th>
+              <th class="p-3 text-left">Coordinator</th>
+              <th class="p-3 text-left">Date</th>
+              <th class="p-3 text-left">Status</th>
+              <th class="p-3 text-left">Registrations</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% events.forEach(event => { %>
+              <tr class="border-t border-gray-200 hover:bg-gray-50">
+                <td class="p-3 font-medium"><%= event.name %></td>
+                <td class="p-3"><%= event.createdBy?.name || 'Unknown' %></td>
+                <td class="p-3"><%= event.coordinator?.name || 'Unassigned' %></td>
+                <td class="p-3"><%= new Date(event.date).toDateString() %></td>
+                <td class="p-3">
+                  <span class="<%= event.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' %> px-3 py-1 rounded-full text-sm">
+                    <%= event.status.charAt(0).toUpperCase() + event.status.slice(1) %>
+                  </span>
+                </td>
+                <td class="p-3"><%= event.registrationCount || 0 %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</main>

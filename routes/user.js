@@ -30,7 +30,10 @@ function isUser(req, res, next) {
 router.get("/dashboard", isUser, async (req, res) => {
   try {
     const user = req.session.user;
-    const events = await Event.find({ status: "approved" }).sort({ date: 1 });
+    const events = await Event.find({ status: "approved" })
+      .populate("createdBy", "name")
+      .populate("coordinator", "name")
+      .sort({ date: 1 });
 
     const registeredCount = await Registration.countDocuments({
       userId: user._id,
@@ -40,7 +43,6 @@ router.get("/dashboard", isUser, async (req, res) => {
       status: "approved",
       date: { $gte: today },
     });
-
     const feedbackCount = await Registration.countDocuments({
       userId: user._id,
       "feedback.comment": { $exists: true },
@@ -52,6 +54,7 @@ router.get("/dashboard", isUser, async (req, res) => {
       registeredCount,
       upcomingCount,
       feedbackCount,
+      admin: { name: "Admin" },
     });
   } catch (err) {
     console.error("Dashboard error:", err);
@@ -85,7 +88,7 @@ router.get("/event/:id", isUser, async (req, res) => {
 });
 
 /* ===========================================================
-   REGISTER FOR EVENT
+   REGISTER FOR EVENT + CREATE TRANSACTION
 =========================================================== */
 router.post("/event/:id/register", isUser, async (req, res) => {
   try {
@@ -94,7 +97,6 @@ router.post("/event/:id/register", isUser, async (req, res) => {
       return res.status(404).send("Event not found");
 
     const userId = req.session.user._id;
-
     const existingReg = await Registration.findOne({
       eventId: event._id,
       userId,
@@ -114,6 +116,7 @@ router.post("/event/:id/register", isUser, async (req, res) => {
       semester: p.semester?.trim(),
     }));
 
+    // Create registration
     const registration = new Registration({
       eventId: event._id,
       userId,
@@ -128,8 +131,18 @@ router.post("/event/:id/register", isUser, async (req, res) => {
       participants: participants.map((p) => ({ name: p.name, email: p.email })),
     };
     registration.qrCode = await QRCode.toDataURL(JSON.stringify(qrData));
-
     await registration.save();
+
+    // Create transaction
+    await Transaction.create({
+      event: event._id,
+      coordinator: event.coordinator || event.createdBy,
+      user: userId,
+      amount: event.regFee,
+      paymentMethod: "online",
+      status: "pending",
+      createdAt: new Date(),
+    });
 
     if (!req.session.registrations) req.session.registrations = {};
     req.session.registrations[event._id] = registration._id;
@@ -195,12 +208,22 @@ router.post("/event/:id/payment-success", isUser, async (req, res) => {
     if (generatedSignature !== razorpaySignature)
       return res.status(400).send("Payment verification failed");
 
-    await Registration.findByIdAndUpdate(registrationId, {
-      paymentStatus: "paid",
-      razorpayPaymentId,
-      razorpayOrderId,
-      razorpaySignature,
-    });
+    const registration = await Registration.findByIdAndUpdate(
+      registrationId,
+      {
+        paymentStatus: "paid",
+        razorpayPaymentId,
+        razorpayOrderId,
+        razorpaySignature,
+      },
+      { new: true }
+    );
+
+    // Update corresponding transaction to success
+    await Transaction.findOneAndUpdate(
+      { user: registration.userId, event: registration.eventId },
+      { status: "success", paymentMethod: "online", updatedAt: new Date() }
+    );
 
     delete req.session.registrations[req.params.id];
     res.redirect("/user/dashboard");
@@ -211,7 +234,7 @@ router.post("/event/:id/payment-success", isUser, async (req, res) => {
 });
 
 /* ===========================================================
-   VIEW MY REGISTRATIONS + SUBMIT FEEDBACK
+   VIEW MY REGISTRATIONS + FEEDBACK
 =========================================================== */
 router.get("/my-registrations", isUser, async (req, res) => {
   try {
@@ -231,32 +254,25 @@ router.get("/my-registrations", isUser, async (req, res) => {
   }
 });
 
-// Submit feedback (single, streamlined route)
+// Feedback submission
 router.post("/registration/:id/feedback", isUser, async (req, res) => {
   try {
     const { comment } = req.body;
     const registration = await Registration.findById(req.params.id).populate(
       "eventId"
     );
-
     if (!registration) return res.status(404).send("Registration not found");
 
-    // Only allow feedback if user has paid and attended
     if (
       registration.userId.toString() !== req.session.user._id.toString() ||
       registration.paymentStatus !== "paid" ||
       registration.status !== "attended"
     ) {
-      return res
-        .status(403)
-        .send(
-          "You are not authorized to submit feedback for this registration."
-        );
+      return res.status(403).send("You are not authorized to submit feedback.");
     }
 
     registration.feedback = { comment: comment.trim() };
     await registration.save();
-
     res.redirect("/user/my-registrations");
   } catch (err) {
     console.error("Feedback submission error:", err);
@@ -375,27 +391,64 @@ router.get("/myEvents", isUser, async (req, res) => {
   }
 });
 
-router.post("/register/:eventId", isUser, async (req, res) => {
+// ============================
+// Upcoming Events / Reminders
+// Upcoming Events / Reminders
+router.get("/reminders", isUser, async (req, res) => {
   try {
-    const event = await Event.findById(req.params.eventId).populate(
-      "createdBy"
-    );
-    if (!event) return res.status(404).send("Event not found");
+    const userId = req.session.user._id;
 
-    const transaction = await Transaction.create({
-      event: event._id,
-      coordinator: event.createdBy,
-      user: req.session.user._id,
-      amount: event.regFee,
-      paymentMethod: req.body.paymentMethod || "online",
-      status: "success",
-    });
+    const registrations = await Registration.find({ userId })
+      .populate("eventId")
+      .lean();
 
-    res.redirect(`/events/${event._id}/success`);
+    const now = new Date();
+
+    const upcomingEvents = registrations
+      .filter((reg) => reg.eventId && reg.eventId.date)
+      .map((reg) => {
+        const event = reg.eventId;
+        const eventTime = new Date(event.date);
+        const diffMs = eventTime - now;
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+        let reminderMessages = [];
+
+        // Base reminder at registration
+        if (diffDays > 1) {
+          reminderMessages.push(
+            `Your event "${event.name}" is in ${diffDays} days!`
+          );
+        } else if (diffDays === 1) {
+          reminderMessages.push(`Your event "${event.name}" is tomorrow!`);
+        } else if (diffHours > 1) {
+          reminderMessages.push(
+            `Your event "${event.name}" will start in ${diffHours} hours!`
+          );
+        } else if (diffHours <= 1 && diffHours > 0) {
+          reminderMessages.push(`Your event "${event.name}" is starting soon!`);
+        } else if (diffHours <= 0) {
+          reminderMessages.push(
+            `Your event "${event.name}" has already started or ended.`
+          );
+        }
+
+        return {
+          eventName: event.name,
+          eventDate: eventTime.toLocaleString(),
+          reminderMessages,
+          status: reg.status || "registered",
+        };
+      });
+
+    res.render("user/reminders", { user: req.session.user, upcomingEvents });
   } catch (err) {
-    console.error("Error creating transaction:", err);
-    res.status(500).send("Error during registration");
+    console.error("Error fetching reminders:", err);
+    res.status(500).send("Failed to fetch reminders");
   }
 });
 
 module.exports = router;
+
+// Reminder thresholds

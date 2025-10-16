@@ -11,9 +11,10 @@ const transactionSchema = new mongoose.Schema({
   amount: { type: Number, required: true },
   paymentMethod: {
     type: String,
-    enum: ["online", "cash", "N/A"],
+    enum: ["online", "cash", "offline", "N/A"], // added "offline"
     default: "online",
   },
+
   status: {
     type: String,
     enum: ["success", "failed", "pending"],

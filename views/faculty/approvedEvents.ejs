@@ -1,0 +1,78 @@
+<%- include("../partials/facultyHeader", { faculty: faculty }) %>
+
+<main class="ml-0 md:ml-60 p-6 bg-gray-100 min-h-screen">
+  <div class="max-w-7xl mx-auto">
+    <h1 class="text-3xl font-bold mb-8 text-gray-800">Approved Events</h1>
+
+    <% if (!events || events.length === 0) { %>
+      <p class="text-gray-600 text-lg">No approved events yet.</p>
+    <% } else { %>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <% events.forEach((event, index) => { %>
+          <div class="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition relative group">
+            
+            <!-- Sliding Media Carousel -->
+            <% if (event.media && event.media.length > 0) { %>
+              <div class="relative overflow-hidden rounded-t-2xl">
+                <div class="flex transition-transform duration-500 ease-in-out" id="carousel-<%= index %>">
+                  <% event.media.forEach(file => { %>
+                    <% const ext = file.split('.').pop().toLowerCase(); %>
+                    <div class="min-w-full h-64 bg-gray-200 flex items-center justify-center">
+                      <% if (["jpg","jpeg","png","gif"].includes(ext)) { %>
+                        <img src="/uploads/<%= file %>" alt="Event media" class="w-full h-full object-cover rounded-t-2xl">
+                      <% } else if (["mp4","webm","ogg"].includes(ext)) { %>
+                        <video controls class="w-full h-full object-cover rounded-t-2xl">
+                          <source src="/uploads/<%= file %>" type="video/<%= ext %>">
+                        </video>
+                      <% } %>
+                    </div>
+                  <% }) %>
+                </div>
+
+                <!-- Carousel Controls -->
+                <button onclick="prevSlide(<%= index %>, <%= event.media.length %>)"
+                        class="absolute left-2 top-1/2 transform -translate-y-1/2 bg-gray-800 bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition">
+                  &#10094;
+                </button>
+                <button onclick="nextSlide(<%= index %>, <%= event.media.length %>)"
+                        class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-800 bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition">
+                  &#10095;
+                </button>
+              </div>
+            <% } %>
+
+            <div class="p-6">
+              <h3 class="text-xl font-bold text-gray-800 mb-2"><%= event.name %></h3>
+              <p class="text-gray-600 mb-2"><%= event.description || "No description" %></p>
+              <p class="text-gray-500 text-sm mb-1"><strong>Date:</strong> <%= new Date(event.date).toDateString() %></p>
+              <p class="text-gray-500 text-sm mb-1"><strong>Venue:</strong> <%= event.venue %></p>
+
+              <a href="/faculty/approved-events/<%= event._id %>/registrations" 
+                 class="inline-block mt-3 w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-xl transition">
+                View Registrations
+              </a>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+</main>
+
+<script>
+  const positions = {}; // store current slide index for each carousel
+
+  function nextSlide(carouselId, length) {
+    const carousel = document.getElementById(`carousel-${carouselId}`);
+    positions[carouselId] = positions[carouselId] || 0;
+    positions[carouselId] = (positions[carouselId] + 1) % length;
+    carousel.style.transform = `translateX(-${positions[carouselId] * 100}%)`;
+  }
+
+  function prevSlide(carouselId, length) {
+    const carousel = document.getElementById(`carousel-${carouselId}`);
+    positions[carouselId] = positions[carouselId] || 0;
+    positions[carouselId] = (positions[carouselId] - 1 + length) % length;
+    carousel.style.transform = `translateX(-${positions[carouselId] * 100}%)`;
+  }
+</script>

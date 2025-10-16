@@ -4,38 +4,47 @@
   <div class="max-w-7xl mx-auto">
     <h1 class="text-3xl font-bold mb-8 text-gray-800">QR Scanner & Attendance</h1>
 
-    <!-- Notification Container -->
+    <!-- Toast Notifications -->
     <div id="notificationContainer" class="fixed top-6 right-6 z-50"></div>
 
-    <!-- QR Scanner Section -->
+    <!-- QR Scanner -->
     <section class="bg-white p-6 rounded-2xl shadow-md mb-8">
       <h2 class="text-2xl font-semibold mb-4 text-gray-700">Scan QR</h2>
       <div id="qr-reader" class="w-full max-w-md mx-auto border border-gray-200 rounded-xl overflow-hidden"></div>
-      <p id="scanMessage" class="mt-3 text-center text-gray-600 font-medium">Select an event first.</p>
+      <p id="scanMessage" class="mt-3 text-center text-gray-600 font-medium">Select an event to start scanning.</p>
     </section>
 
-    <!-- Events List Section -->
+    <!-- Approved Events -->
     <section class="bg-white p-6 rounded-2xl shadow-md mb-8">
-      <h2 class="text-2xl font-semibold mb-4 text-gray-700">My Events</h2>
-      <div id="eventsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <% createdEvents.forEach(event => { %>
-          <div class="eventCard bg-blue-50 hover:bg-blue-100 cursor-pointer rounded-xl p-4 transition shadow-sm hover:shadow-md" data-event-id="<%= event._id %>">
-            <h3 class="text-lg font-bold text-blue-700"><%= event.name %></h3>
-            <p class="text-gray-600 text-sm mt-1">Date: <%= event.dateFormatted %></p>
-            <p class="text-gray-600 text-sm">Venue: <%= event.venue %></p>
-            <% if(event.media && event.media.length > 0) { %>
-              <div class="mt-2 flex space-x-2 overflow-x-auto">
-                <% event.media.forEach(file => { %>
-                  <img src="/uploads/<%= file %>" alt="media" class="w-16 h-16 object-cover rounded-lg border border-gray-200">
-                <% }) %>
+      <h2 class="text-2xl font-semibold mb-4 text-gray-700">My Approved Events</h2>
+      <% if (createdEvents.length === 0) { %>
+        <p class="text-gray-600">No approved events assigned to you yet.</p>
+      <% } else { %>
+        <div id="eventsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <% createdEvents.forEach(event => { %>
+            <% if (event.status === 'approved') { %>
+              <div
+                class="eventCard bg-blue-50 hover:bg-blue-100 cursor-pointer rounded-xl p-4 transition shadow-sm hover:shadow-md"
+                data-event-id="<%= event._id %>"
+              >
+                <h3 class="text-lg font-bold text-blue-700"><%= event.name %></h3>
+                <p class="text-gray-600 text-sm mt-1">Date: <%= event.dateFormatted %></p>
+                <p class="text-gray-600 text-sm">Venue: <%= event.venue %></p>
+                <% if (event.media && event.media.length > 0) { %>
+                  <div class="mt-2 flex space-x-2 overflow-x-auto">
+                    <% event.media.forEach(file => { %>
+                      <img src="/uploads/<%= file %>" alt="media" class="w-16 h-16 object-cover rounded-lg border border-gray-200">
+                    <% }) %>
+                  </div>
+                <% } %>
               </div>
             <% } %>
-          </div>
-        <% }) %>
-      </div>
+          <% }) %>
+        </div>
+      <% } %>
     </section>
 
-    <!-- Attendance Table -->
+    <!-- Attendance Section -->
     <section id="attendanceSection" class="mt-8 hidden bg-white p-6 rounded-2xl shadow-md">
       <h2 class="text-2xl font-semibold mb-4 text-gray-700">Event Attendance</h2>
       <div class="overflow-x-auto">
@@ -54,6 +63,7 @@
   </div>
 </main>
 
+<!-- QR Code Library -->
 <script src="https://unpkg.com/html5-qrcode@2.3.7"></script>
 <script>
   let selectedEventId = null;
@@ -62,17 +72,19 @@
   const notificationContainer = document.getElementById("notificationContainer");
   let currentToast = null;
 
+  // Toast Notification
   function showToast(message, type = "success", duration = 3000) {
-    if(currentToast) notificationContainer.removeChild(currentToast);
+    if (currentToast) notificationContainer.removeChild(currentToast);
 
     const toast = document.createElement("div");
-    toast.className = `px-4 py-2 rounded-lg shadow-md mb-2 text-white ${type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-yellow-500'}`;
+    toast.className = `px-4 py-2 rounded-lg shadow-md mb-2 text-white ${
+      type === "success" ? "bg-green-600" : type === "error" ? "bg-red-600" : "bg-yellow-500"
+    }`;
     toast.innerText = message;
     notificationContainer.appendChild(toast);
     currentToast = toast;
 
     setTimeout(() => {
-      toast.style.transform = "translateX(120%)";
       toast.style.opacity = "0";
     }, duration);
     setTimeout(() => {
@@ -83,11 +95,11 @@
     }, duration + 300);
   }
 
-  // Select event
+  // Select Event
   document.querySelectorAll(".eventCard").forEach(card => {
     card.addEventListener("click", () => {
       selectedEventId = card.dataset.eventId;
-      scanMessage.innerText = "Event selected. Ready to scan QR.";
+      scanMessage.innerText = "✅ Event selected. You can now scan QR codes.";
       loadAttendance(selectedEventId);
 
       document.querySelectorAll(".eventCard").forEach(c => c.classList.remove("ring-2", "ring-blue-500"));
@@ -95,20 +107,21 @@
     });
   });
 
+  // Load Attendance Table
   function loadAttendance(eventId) {
     fetch(`/event-coordinator/event-attendance/${eventId}`)
       .then(res => res.json())
       .then(data => {
-        if(data.success) {
+        if (data.success) {
           tbody.innerHTML = "";
           data.registrations.forEach(r => {
             const tr = document.createElement("tr");
             tr.innerHTML = `
               <td class="px-4 py-2 text-gray-700 font-medium">${r.userId ? r.userId.name : "N/A"}</td>
               <td class="px-4 py-2 text-gray-600">${r.userId ? r.userId.email : "N/A"}</td>
-              <td class="px-4 py-2 font-semibold ${r.status === "attended" ? "text-green-600" : "text-red-600"}">
-                ${r.status === "attended" ? "Present" : "Absent"}
-              </td>
+              <td class="px-4 py-2 font-semibold ${
+                r.status === "attended" ? "text-green-600" : "text-red-600"
+              }">${r.status === "attended" ? "Present" : "Absent"}</td>
             `;
             tbody.appendChild(tr);
           });
@@ -117,41 +130,44 @@
       });
   }
 
-  // Initialize QR scanner
+  // QR Code Scanner Setup
   const html5QrCode = new Html5Qrcode("qr-reader");
-  html5QrCode.start(
-    { facingMode: "environment" },
-    { fps: 10, qrbox: { width: 300, height: 300 } },
-    decodedText => {
-      if(!selectedEventId){
-        showToast("Select an event first!", "error");
-        return;
-      }
-
-      fetch("/event-coordinator/scan-qr", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ qrData: decodedText, eventId: selectedEventId })
-      })
-      .then(res => res.json())
-      .then(data => {
-        // Only allow marking attendance if paid
-        if(!data.success && data.status === "unpaid"){
-          showToast("Participant has not paid. Cannot mark attendance.", "error");
+  html5QrCode
+    .start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 300, height: 300 } },
+      decodedText => {
+        if (!selectedEventId) {
+          showToast("Please select an event first.", "error");
           return;
         }
-        showToast(data.message, data.success ? "success" : "error");
-        if(data.success) loadAttendance(selectedEventId);
-      })
-      .catch(() => showToast("Error marking attendance.", "error"));
-    },
-    errorMessage => {}
-  ).catch(err => {
-    console.error("Camera error:", err);
-    showToast("Camera not accessible. Check permissions.", "error");
-  });
+
+        fetch("/event-coordinator/scan-qr", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ qrData: decodedText, eventId: selectedEventId })
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (!data.success && data.status === "unpaid") {
+              showToast("Participant has not paid. Cannot mark attendance.", "error");
+              return;
+            }
+            showToast(data.message, data.success ? "success" : "error");
+            if (data.success) loadAttendance(selectedEventId);
+          })
+          .catch(() => showToast("Error marking attendance.", "error"));
+      }
+    )
+    .catch(err => {
+      console.error("Camera error:", err);
+      showToast("Camera not accessible. Check permissions.", "error");
+    });
 </script>
 
 <style>
-  body { font-family: 'Inter', sans-serif; background-color: #f9fafb; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f9fafb;
+  }
 </style>

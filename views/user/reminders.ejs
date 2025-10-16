@@ -1,0 +1,38 @@
+<%- include('../partials/userHeader', { user: user }) %>
+
+<main class="ml-0 md:ml-60 p-6 bg-gray-100 min-h-screen">
+  <div class="max-w-5xl mx-auto bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">Upcoming Event Reminders</h2>
+
+    <% if (upcomingEvents.length > 0) { %>
+      <div class="space-y-6">
+        <% upcomingEvents.forEach((ev) => { %>
+          <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-lg font-semibold text-gray-800"><%= ev.eventName %></h3>
+              <span class="text-sm text-gray-500"><%= ev.eventDate %></span>
+            </div>
+
+            <% if (ev.reminderMessages && ev.reminderMessages.length > 0) { %>
+              <div class="space-y-2">
+                <% ev.reminderMessages.forEach((msg) => { %>
+                  <div class="p-3 bg-blue-50 border-l-4 border-blue-500 rounded">
+                    <p class="text-gray-800 font-medium"><%= msg %></p>
+                  </div>
+                <% }) %>
+              </div>
+            <% } else { %>
+              <p class="text-gray-500 italic">No active reminders for this event.</p>
+            <% } %>
+          </div>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <p class="text-gray-600 text-center py-8">No upcoming events.</p>
+    <% } %>
+
+    <div class="mt-6">
+      <a href="/dashboard" class="text-blue-600 hover:underline font-medium">← Back to Dashboard</a>
+    </div>
+  </div>
+</main>

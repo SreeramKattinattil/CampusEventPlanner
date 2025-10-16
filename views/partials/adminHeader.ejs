@@ -3,36 +3,47 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Elegant Admin Panel</title>
+  <title>Admin Panel</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 text-gray-800">
 
   <!-- Sidebar -->
-  <aside class="fixed inset-y-0 left-0 w-60 bg-gray-900 text-gray-200 flex flex-col py-6">
-    <h2 class="text-center text-2xl font-bold text-white mb-8">Admin</h2>
-    <nav class="flex-1 space-y-2">
-      <a href="/admin/adminDashboard" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition">
-        🏠 <span class="ml-3">Dashboard</span>
-      </a>
-      <a href="/admin/events" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition">
-        📅 <span class="ml-3">Events</span>
-      </a>
-      <a href="/admin/facultyList" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition">
-        👨‍🏫 <span class="ml-3">Faculty</span>
-      </a>
-      <a href="/admin/students" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition">
-        🎓 <span class="ml-3">Students</span>
-      </a>
-      <a href="/admin/addFaculty" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition">
-        ➕ <span class="ml-3">Add Faculty</span>
-      </a>
-    </nav>
-  </aside>
+  <!-- Sidebar -->
+<aside class="fixed inset-y-0 left-0 w-60 bg-gray-900 text-gray-200 flex flex-col py-6">
+  <h2 class="text-center text-2xl font-bold text-white mb-8">Admin</h2>
+  <nav class="flex-1 space-y-2">
+    <a href="/admin/adminDashboard" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition">
+      🏠 <span class="ml-3">Dashboard</span>
+    </a>
+    <a href="/admin/approveEvents" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition">
+      ✅ <span class="ml-3">Approve Events</span>
+    </a>
+    <a href="/admin/viewFaculty" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition">
+      👨‍🏫 <span class="ml-3">Faculty</span>
+    </a>
+    <a href="/admin/viewUsers" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition">
+      🎓 <span class="ml-3">Students</span>
+    </a>
+    <a href="/admin/viewEventCoordinators" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition">
+      📋 <span class="ml-3">Event Coordinators</span>
+    </a>
+    <a href="/admin/addFaculty" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition">
+      ➕ <span class="ml-3">Add Faculty</span>
+    </a>
+    <a href="/admin/approvedEvents" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition">
+      ✅ <span class="ml-3">Approved Events</span>
+    </a>
+    <a href="/admin/rejectedEvents" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition">
+      ❌ <span class="ml-3">Rejected Events</span>
+    </a>
+  </nav>
+</aside>
+
 
   <!-- Topbar -->
   <div class="ml-60 bg-white shadow rounded-lg px-6 py-4 flex justify-between items-center">
-    <h1 class="text-xl font-semibold">Dashboard</h1>
+    <h1 class="text-xl font-semibold">Admin Dashboard</h1>
     <div class="relative group">
       <button class="flex items-center space-x-2 focus:outline-none">
         <img src="https://i.pravatar.cc/40?img=3" alt="Admin" class="w-10 h-10 rounded-full border">
@@ -50,24 +61,22 @@
     </div>
   </div>
 
-  <!-- Stats Cards -->
+  <!-- Stats Section -->
   <div class="ml-60 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6 px-4 md:px-8">
     <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
       <h3 class="text-lg font-semibold mb-2">Total Users</h3>
-      <p class="text-gray-500"><%= stats?.totalUsers || 0 %> active users</p>
+      <p class="text-gray-500"><%= stats?.totalUsers || 0 %></p>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+      <h3 class="text-lg font-semibold mb-2">Total Faculty</h3>
+      <p class="text-gray-500"><%= stats?.totalFaculty || 0 %></p>
     </div>
     <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
       <h3 class="text-lg font-semibold mb-2">Total Events</h3>
       <p class="text-gray-500"><%= stats?.totalEvents || 0 %></p>
     </div>
     <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
-      <h3 class="text-lg font-semibold mb-2">Faculty Assigned</h3>
-      <p class="text-gray-500"><%= stats?.totalFaculty || 0 %></p>
-    </div>
-    <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
-      <h3 class="text-lg font-semibold mb-2">Live Events</h3>
-      <p class="text-gray-500">
-        <%= events?.filter(event => new Date(event.date) >= new Date()).length || 0 %>
-      </p>
+      <h3 class="text-lg font-semibold mb-2">Approved Events</h3>
+      <p class="text-gray-500"><%= stats?.approvedEvents || 0 %></p>
     </div>
   </div>

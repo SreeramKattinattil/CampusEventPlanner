@@ -1,67 +1,38 @@
-<%- include("../partials/facultyHeader", { faculty: faculty, stats: stats }) %>
+<%- include('../partials/facultyHeader', { faculty: faculty }) %>
 
-<div class="max-w-5xl mx-auto bg-white shadow-lg rounded-lg p-6 mt-6">
-  <h2 class="text-2xl font-bold mb-6">Pending Events</h2>
+<main class="ml-0 md:ml-60 p-6 bg-gray-100 min-h-screen">
+  <div class="bg-white rounded-2xl shadow-md p-6 border border-gray-200">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">Pending Events</h2>
 
-  <% if (!events || events.length === 0) { %>
-    <p class="text-gray-600">No pending events to review.</p>
-  <% } else { %>
-    <ul class="space-y-4">
-      <% events.forEach(event => { %>
-        <li class="border p-4 rounded-lg bg-gray-50">
-          <h3 class="text-xl font-semibold"><%= event.name %></h3>
-          <p class="text-gray-700"><%= event.description || "No description" %></p>
-          <p class="text-sm text-gray-500 mt-1">
-            Date: <%= event.date %> | Time: <%= event.time %> | Venue: <%= event.venue %>
-          </p>
-          
-          <div class="mt-4 flex space-x-2">
-            <!-- Approve Button -->
-            <form action="/faculty/approve/<%= event._id %>" method="POST">
-              <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
-                Approve
-              </button>
-            </form>
-
-            <!-- Reject Button triggers modal -->
-            <button 
-              class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
-              onclick="openRejectModal('<%= event._id %>')">
-              Reject
-            </button>
-          </div>
-        </li>
-      <% }) %>
-    </ul>
-  <% } %>
-</div>
-
-<!-- Modal HTML -->
-<div id="rejectModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-  <div class="bg-white rounded-lg p-6 w-96 relative">
-    <h3 class="text-xl font-semibold mb-4">Reject Event</h3>
-    <form id="rejectForm" method="POST">
-      <textarea name="reason" placeholder="Enter rejection reason" class="w-full border p-2 rounded mb-4" required></textarea>
-      <div class="flex justify-end space-x-2">
-        <button type="button" onclick="closeRejectModal()" class="px-4 py-2 rounded border">Cancel</button>
-        <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Submit</button>
+    <% if (events.length === 0) { %>
+      <p class="text-gray-600">No events are currently waiting for approval.</p>
+    <% } else { %>
+      <div class="overflow-x-auto">
+        <table class="min-w-full bg-white border border-gray-200 rounded-xl">
+          <thead>
+            <tr class="bg-gray-100 text-gray-700 text-left">
+              <th class="p-3">Event Name</th>
+              <th class="p-3">Date</th>
+              <th class="p-3">Department</th>
+              <th class="p-3">Coordinator</th>
+              <th class="p-3">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% events.forEach(event => { %>
+              <tr class="border-t border-gray-200 hover:bg-gray-50">
+                <td class="p-3 font-medium"><%= event.name %></td>
+                <td class="p-3"><%= new Date(event.date).toDateString() %></td>
+                <td class="p-3"><%= event.department %></td>
+                <td class="p-3">
+                  <%= event.coordinator ? event.coordinator.name : 'Unassigned' %>
+                </td>
+                <td class="p-3 text-yellow-600 font-semibold capitalize"><%= event.status %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
       </div>
-    </form>
+    <% } %>
   </div>
-</div>
-
-<script>
-  const modal = document.getElementById("rejectModal");
-  const rejectForm = document.getElementById("rejectForm");
-
-  function openRejectModal(eventId) {
-    modal.classList.remove("hidden");
-    rejectForm.action = "/faculty/reject/" + eventId;
-  }
-
-  function closeRejectModal() {
-    modal.classList.add("hidden");
-    rejectForm.action = "";
-    rejectForm.reason.value = "";
-  }
-</script>
+</main>

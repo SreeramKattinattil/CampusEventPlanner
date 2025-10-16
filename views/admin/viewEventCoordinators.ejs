@@ -1,0 +1,128 @@
+<%- include("../partials/adminHeader", { user: admin, stats: stats, events: events, pageTitle: "Event Coordinators" }) %>
+
+<div class="ml-60 mt-10 p-6">
+  <div class="max-w-6xl mx-auto bg-white rounded shadow p-6">
+    <h2 class="text-2xl font-bold mb-4">Event Coordinators</h2>
+
+    <!-- Department Filter -->
+    <form action="/admin/viewEventCoordinators" method="GET" class="flex space-x-2 mb-4 items-center">
+      <select name="department" class="border p-2 rounded">
+        <option value="">All Departments</option>
+        <option value="MCA" <%= selectedDept === "MCA" ? "selected" : "" %>>MCA</option>
+        <option value="MBA" <%= selectedDept === "MBA" ? "selected" : "" %>>MBA</option>
+        <option value="iMCA" <%= selectedDept === "iMCA" ? "selected" : "" %>>iMCA</option>
+        <option value="Btech.CSE" <%= selectedDept === "Btech.CSE" ? "selected" : "" %>>Btech.CSE</option>
+        <option value="Btech.ECE" <%= selectedDept === "Btech.ECE" ? "selected" : "" %>>Btech.ECE</option>
+        <option value="Btech.ME" <%= selectedDept === "Btech.ME" ? "selected" : "" %>>Btech.ME</option>
+        <option value="Btech.CE" <%= selectedDept === "Btech.CE" ? "selected" : "" %>>Btech.CE</option>
+        <option value="Btech.EEE" <%= selectedDept === "Btech.EEE" ? "selected" : "" %>>Btech.EEE</option>
+        <option value="Btech.NASB" <%= selectedDept === "Btech.NASB" ? "selected" : "" %>>Btech.NASB</option>
+      </select>
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Filter</button>
+      <button type="button" id="toggleSelectBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 ml-auto">
+        Select
+      </button>
+    </form>
+
+    <% if (eventCoordinators.length === 0) { %>
+      <p>No event coordinators found.</p>
+    <% } else { %>
+      <form action="/admin/deleteEventCoordinators" method="POST" id="deleteCoordinatorsForm">
+        <table class="w-full border-collapse">
+          <thead>
+            <tr class="bg-gray-200">
+              <th class="border p-2 text-center">
+                <input type="checkbox" id="selectAll" class="form-checkbox hidden">
+              </th>
+              <th class="border p-2 text-left">Name</th>
+              <th class="border p-2 text-left">Email</th>
+              <th class="border p-2 text-left">Department</th>
+              <th class="border p-2 text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% eventCoordinators.forEach(coordinator => { %>
+              <tr class="hover:bg-gray-100">
+                <td class="border p-2 text-center">
+                  <input type="checkbox" name="coordinatorIds[]" value="<%= coordinator._id %>" class="form-checkbox rowCheckbox hidden">
+                </td>
+                <td class="border p-2"><%= coordinator.name %></td>
+                <td class="border p-2"><%= coordinator.email %></td>
+                <td class="border p-2"><%= coordinator.department %></td>
+                <td class="border p-2 text-center">
+                  <form action="/admin/deleteEventCoordinators" method="POST" class="inline-block singleDeleteForm">
+                    <input type="hidden" name="coordinatorIds[]" value="<%= coordinator._id %>">
+                    <button type="submit" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-700">
+                      Delete
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+
+        <div class="mt-4">
+          <button type="submit" id="deleteSelectedBtn" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 hidden">
+            Delete All
+          </button>
+        </div>
+      </form>
+    <% } %>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const toggleSelectBtn = document.getElementById('toggleSelectBtn');
+  const rowCheckboxes = document.querySelectorAll('.rowCheckbox');
+  const selectAllCheckbox = document.getElementById('selectAll');
+  const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+
+  let selecting = false;
+
+  // Toggle select mode
+  toggleSelectBtn.addEventListener('click', () => {
+    selecting = !selecting;
+    rowCheckboxes.forEach(cb => cb.classList.toggle('hidden', !selecting));
+    selectAllCheckbox.classList.toggle('hidden', !selecting);
+    deleteSelectedBtn.classList.toggle('hidden', !selecting);
+    toggleSelectBtn.textContent = selecting ? 'Cancel' : 'Select';
+  });
+
+  // Select All functionality
+  selectAllCheckbox.addEventListener('change', function() {
+    rowCheckboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
+    updateDeleteButton();
+  });
+
+  // Update Delete button text based on selection
+  rowCheckboxes.forEach(cb => cb.addEventListener('change', updateDeleteButton));
+  function updateDeleteButton() {
+    const anySelected = Array.from(rowCheckboxes).some(cb => cb.checked);
+    deleteSelectedBtn.textContent = anySelected ? 'Delete All' : 'Delete Selected';
+  }
+
+  // Delete selected coordinators confirmation
+  document.getElementById('deleteCoordinatorsForm').addEventListener('submit', function(e) {
+    const anySelected = Array.from(rowCheckboxes).some(cb => cb.checked);
+    if (!anySelected && selecting) {
+      e.preventDefault();
+      alert('Please select at least one coordinator to delete.');
+      return;
+    }
+    if (!confirm('Are you sure you want to delete the selected coordinators? This action cannot be undone.')) {
+      e.preventDefault();
+    }
+  });
+
+  // Single delete confirmation
+  document.querySelectorAll('.singleDeleteForm').forEach(form => {
+    form.addEventListener('submit', function(e) {
+      if (!confirm('Are you sure you want to delete this coordinator?')) {
+        e.preventDefault();
+      }
+    });
+  });
+});
+</script>
