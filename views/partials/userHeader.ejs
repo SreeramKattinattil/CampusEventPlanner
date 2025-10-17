@@ -7,7 +7,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 text-gray-800">
-
 <!-- Sidebar -->
 <aside class="fixed inset-y-0 left-0 w-60 bg-gray-900 text-gray-200 flex flex-col py-6">
   <h2 class="text-center text-2xl font-bold text-teal-400 mb-8">Campus Portal</h2>
@@ -24,8 +23,12 @@
     <a href="/user/feedback" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition duration-200">
       💬 <span class="ml-3">Feedback</span>
     </a>
-     <a href="/user/reminders" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition duration-200">
-      💬 <span class="ml-3">reminders</span>
+    <a href="/user/reminders" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition duration-200">
+      ⏰ <span class="ml-3">Reminders</span>
+    </a>
+    <!-- 🖼️ Add Memories -->
+    <a href="/user/memories" class="flex items-center px-6 py-3 hover:bg-gray-800 rounded-md transition duration-200">
+      🖼️ <span class="ml-3"> Memories</span>
     </a>
   </nav>
 </aside>
@@ -70,6 +73,8 @@
       <p class="text-gray-500"><%= typeof feedbackCount !== "undefined" ? feedbackCount : 0 %> feedbacks</p>
     </div>
 
+    
+
     <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
       <h3 class="text-lg font-semibold mb-2">Profile Status</h3>
       <% if(user?.department && user?.semester && user?.mobile){ %>
@@ -80,6 +85,3 @@
     </div>
   </div>
 </main>
-
-</body>
-</html>

@@ -1,98 +1,298 @@
-<%- include('../partials/adminHeader', { admin: admin, stats: stats, events: events }) %>
+<%- include('../partials/adminHeader', { admin, stats, events }) %>
 
-<main class="ml-60 p-6 bg-gray-100 min-h-screen">
+<main class="ml-60 p-8 bg-gradient-to-br from-gray-50 to-blue-50/30 min-h-screen space-y-8">
 
-  <!-- Charts Section -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-    <!-- Events per Department -->
-    <div class="bg-white p-6 rounded-lg shadow">
-      <h3 class="text-gray-700 font-semibold mb-4">Events per Department</h3>
-      <canvas id="eventsChart"></canvas>
+  <!-- Welcome Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Admin Dashboard</h1>
+    <p class="text-gray-600">Welcome back, <%= admin.name %>! Here's your event overview.</p>
+  </div>
+
+  <!-- Charts & Upcoming Events Section -->
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
+    <!-- Events per Department Chart -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg font-semibold text-gray-800">Events by Department</h3>
+        <div class="flex items-center space-x-2 text-sm text-gray-500">
+          <i class="fas fa-chart-bar"></i>
+          <span>Distribution</span>
+        </div>
+      </div>
+      <div class="h-80">
+        <canvas id="eventsChart"></canvas>
+      </div>
     </div>
 
-    <!-- Monthly Transactions -->
-    <div class="bg-white p-6 rounded-lg shadow">
-      <h3 class="text-gray-700 font-semibold mb-4">Monthly Transactions</h3>
-      <canvas id="transactionsChart"></canvas>
+    <!-- Upcoming Events -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg font-semibold text-gray-800">Upcoming Events</h3>
+        <button class="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center space-x-1">
+          <span>View All</span>
+          <i class="fas fa-chevron-right text-xs"></i>
+        </button>
+      </div>
+      
+      <div class="space-y-4 max-h-96 overflow-y-auto pr-2">
+        <% 
+          const now = new Date();
+          const upcomingEvents = events.filter(e => new Date(e.date) > now);
+          if (upcomingEvents.length > 0) { 
+            upcomingEvents.slice(0, 5).forEach((ev, index) => { 
+        %>
+          <div class="flex items-start space-x-3 p-3 rounded-xl hover:bg-gray-50 transition-colors duration-200">
+            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+              <%= new Date(ev.date).getDate() %>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between mb-1">
+                <h4 class="font-medium text-gray-800 truncate"><%= ev.name %></h4>
+                <span class="px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
+                  Upcoming
+                </span>
+              </div>
+              <p class="text-sm text-gray-600 mb-1">
+                <i class="fas fa-map-marker-alt text-gray-400 mr-1"></i>
+                <%= ev.location || 'TBA' %>
+              </p>
+              <div class="flex items-center justify-between text-xs text-gray-500">
+                <span><%= ev.department || 'General' %></span>
+                <span><%= new Date(ev.date).toLocaleDateString() %></span>
+              </div>
+            </div>
+          </div>
+        <% }) } else { %>
+          <div class="text-center py-8">
+            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <i class="fas fa-calendar text-gray-400 text-xl"></i>
+            </div>
+            <p class="text-gray-500">No upcoming events scheduled</p>
+          </div>
+        <% } %>
+      </div>
     </div>
   </div>
 
-  <!-- Recent Feedback Table -->
-  <div class="bg-white p-6 rounded-lg shadow">
-    <h3 class="text-gray-700 font-semibold mb-4">Recent Feedback</h3>
-    <div class="overflow-x-auto">
-      <table class="min-w-full text-left border-collapse">
-        <thead>
-          <tr class="border-b border-gray-200">
-            <th class="px-4 py-2 text-gray-500">#</th>
-            <th class="px-4 py-2 text-gray-500">User</th>
-            <th class="px-4 py-2 text-gray-500">Event</th>
-            <th class="px-4 py-2 text-gray-500">Comment</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% if (feedbacks && feedbacks.length > 0) { %>
-            <% feedbacks.forEach((fb, index) => { %>
-              <tr class="hover:bg-gray-50">
-                <td class="px-4 py-2"><%= index + 1 %></td>
-                <td class="px-4 py-2"><%= fb.userId?.name || 'N/A' %></td>
-                <td class="px-4 py-2"><%= fb.eventId?.name || 'N/A' %></td>
-                <td class="px-4 py-2"><%= fb.feedback?.comment || '-' %></td>
-              </tr>
-            <% }) %>
-          <% } else { %>
-            <tr>
-              <td class="px-4 py-2 text-center" colspan="4">No feedback yet</td>
-            </tr>
-          <% } %>
-        </tbody>
-      </table>
+  <!-- Recent Feedback & Memories Section -->
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+    <!-- Recent Feedback -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg font-semibold text-gray-800">Recent Feedback</h3>
+        <button class="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center space-x-1">
+          <span>View All</span>
+          <i class="fas fa-chevron-right text-xs"></i>
+        </button>
+      </div>
+      
+      <div class="space-y-4 max-h-96 overflow-y-auto pr-2">
+        <% if (feedbacks && feedbacks.length > 0) { %>
+          <% feedbacks.slice(0, 6).forEach((fb, index) => { %>
+            <div class="flex items-start space-x-3 p-3 rounded-xl hover:bg-gray-50 transition-colors duration-200">
+              <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                <%= (fb.userId?.name || 'U').charAt(0).toUpperCase() %>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between mb-1">
+                  <h4 class="font-medium text-gray-800 truncate"><%= fb.userId?.name || 'Anonymous User' %></h4>
+                  <span class="text-xs text-gray-500 whitespace-nowrap">
+                    <%= new Date(fb.createdAt).toLocaleDateString() %>
+                  </span>
+                </div>
+                <p class="text-sm text-gray-600 mb-1 line-clamp-2"><%= fb.feedback?.comment || 'No comment provided' %></p>
+                <p class="text-xs text-blue-600 font-medium"><%= fb.eventId?.name || 'Event' %></p>
+              </div>
+            </div>
+          <% }) %>
+        <% } else { %>
+          <div class="text-center py-8">
+            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <i class="fas fa-comment text-gray-400 text-xl"></i>
+            </div>
+            <p class="text-gray-500">No feedback received yet</p>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Event Memories -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg font-semibold text-gray-800">Event Memories</h3>
+        <button class="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center space-x-1">
+          <span>View All</span>
+          <i class="fas fa-chevron-right text-xs"></i>
+        </button>
+      </div>
+
+      <% if (!mediaList || mediaList.length === 0) { %>
+        <div class="text-center py-8">
+          <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <i class="fas fa-images text-gray-400 text-xl"></i>
+          </div>
+          <p class="text-gray-500">No memories shared yet</p>
+        </div>
+      <% } else { %>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-96 overflow-y-auto pr-2">
+          <% mediaList.slice(0, 4).forEach(post => {
+               const files = post.files && post.files.length ? post.files : [{ mediaType: post.mediaType, mediaUrl: post.mediaUrl }];
+          %>
+            <div class="group bg-gray-50 rounded-xl overflow-hidden hover:shadow-md transition-all duration-300 border border-gray-200">
+              <div class="relative h-40 overflow-hidden">
+                <div class="swiper memorySwiper h-full">
+                  <div class="swiper-wrapper">
+                    <% files.forEach(file => { %>
+                      <div class="swiper-slide">
+                        <% if (file.mediaType === 'image') { %>
+                          <img src="<%= file.mediaUrl %>" alt="Memory" class="w-full h-full object-cover">
+                        <% } else { %>
+                          <div class="w-full h-full bg-gray-800 flex items-center justify-center relative">
+                            <video class="w-full h-full object-cover">
+                              <source src="<%= file.mediaUrl %>" type="video/mp4">
+                            </video>
+                            <div class="absolute inset-0 bg-black/20 flex items-center justify-center">
+                              <i class="fas fa-play text-white text-2xl"></i>
+                            </div>
+                          </div>
+                        <% } %>
+                      </div>
+                    <% }) %>
+                  </div>
+                  <% if (files.length > 1) { %>
+                    <div class="swiper-pagination !bottom-2"></div>
+                  <% } %>
+                </div>
+                
+                <!-- Media type badge -->
+                <div class="absolute top-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
+                  <% if (files[0].mediaType === 'image') { %>
+                    <i class="fas fa-image mr-1"></i>
+                  <% } else { %>
+                    <i class="fas fa-video mr-1"></i>
+                  <% } %>
+                  <%= files.length %>
+                </div>
+              </div>
+              
+              <div class="p-3">
+                <h4 class="font-medium text-gray-800 text-sm mb-1 line-clamp-1"><%= post.caption || "Untitled Memory" %></h4>
+                <div class="flex items-center justify-between text-xs text-gray-500">
+                  <span class="line-clamp-1"><%= post.event?.name %></span>
+                  <span class="whitespace-nowrap">By <%= post.coordinator?.name %></span>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
     </div>
   </div>
 
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
 <script>
+  // Chart colors
+  const chartColors = {
+    blue: '#3B82F6',
+    green: '#10B981',
+    purple: '#8B5CF6',
+    orange: '#F59E0B',
+    pink: '#EC4899',
+    indigo: '#6366F1'
+  };
+
   // Events per Department Chart
   const eventsByDept = <%- JSON.stringify(events.reduce((acc, e) => {
     acc[e.department] = (acc[e.department] || 0) + 1;
     return acc;
   }, {})) %>;
 
+  const departmentColors = Object.keys(eventsByDept).map((_, i) => 
+    Object.values(chartColors)[i % Object.values(chartColors).length]
+  );
+
   new Chart(document.getElementById('eventsChart').getContext('2d'), {
-    type: 'bar',
+    type: 'doughnut',
     data: {
       labels: Object.keys(eventsByDept),
       datasets: [{
-        label: 'Events',
         data: Object.values(eventsByDept),
-        backgroundColor: '#3B82F6'
+        backgroundColor: departmentColors,
+        borderWidth: 2,
+        borderColor: '#fff'
       }]
     },
-    options: { responsive: true, plugins: { legend: { display: false } } }
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: {
+            usePointStyle: true,
+            padding: 20
+          }
+        }
+      },
+      cutout: '65%'
+    }
   });
 
-  // Monthly Transactions Chart
-  const monthlyTransactions = <%- JSON.stringify(transactions.reduce((acc, t) => {
-    const month = new Date(t.createdAt).toLocaleString('default', { month: 'short' });
-    acc[month] = (acc[month] || 0) + (t.amount || 0);
-    return acc;
-  }, {})) %>;
-
-  new Chart(document.getElementById('transactionsChart').getContext('2d'), {
-    type: 'line',
-    data: {
-      labels: Object.keys(monthlyTransactions),
-      datasets: [{
-        label: 'Transactions ($)',
-        data: Object.values(monthlyTransactions),
-        borderColor: '#10B981',
-        backgroundColor: 'rgba(16,185,129,0.2)',
-        tension: 0.3,
-        fill: true
-      }]
-    },
-    options: { responsive: true, plugins: { legend: { display: false } } }
+  // Initialize memory swipers
+  document.addEventListener('DOMContentLoaded', function() {
+    const memorySwipers = document.querySelectorAll('.memorySwiper');
+    memorySwipers.forEach(swiperEl => {
+      new Swiper(swiperEl, {
+        loop: false,
+        spaceBetween: 0,
+        pagination: {
+          el: swiperEl.querySelector('.swiper-pagination'),
+          clickable: true,
+          dynamicBullets: true,
+        },
+        autoplay: {
+          delay: 3000,
+          disableOnInteraction: false,
+        },
+      });
+    });
   });
 </script>
+
+<style>
+  .line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  /* Custom scrollbar */
+  .overflow-y-auto::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .overflow-y-auto::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+  }
+  
+  .overflow-y-auto::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+  }
+  
+  .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+  }
+</style>

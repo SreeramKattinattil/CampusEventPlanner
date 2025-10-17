@@ -1,0 +1,108 @@
+<%- include('../partials/adminHeader', { admin, stats }) %>
+
+<main class="ml-60 p-6 bg-gray-100 min-h-screen">
+  <div class="max-w-7xl mx-auto bg-white p-6 rounded-xl shadow">
+
+    <h2 class="text-3xl font-semibold mb-6 text-gray-800">All Event Registrations</h2>
+
+    <!-- Filters -->
+    <div class="flex flex-wrap items-center gap-4 mb-6">
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="Search by event or participant..."
+        class="border rounded px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+
+      <select id="departmentFilter" class="border rounded px-3 py-2">
+        <option value="">All Departments</option>
+        <% const departments = [...new Set(registrations.map(r => r.eventId?.department))]; %>
+        <% departments.forEach(dept => { %>
+          <option value="<%= dept %>"><%= dept %></option>
+        <% }) %>
+      </select>
+
+      <select id="eventFilter" class="border rounded px-3 py-2">
+        <option value="">All Events</option>
+        <% const events = [...new Set(registrations.map(r => r.eventId?.name))]; %>
+        <% events.forEach(e => { %>
+          <option value="<%= e %>"><%= e %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-left border-collapse">
+        <thead class="bg-gray-50">
+          <tr class="border-b border-gray-200">
+            <th class="px-4 py-2">#</th>
+            <th class="px-4 py-2">Event</th>
+            <th class="px-4 py-2">Registered By</th>
+            <th class="px-4 py-2">Participants</th>
+            <th class="px-4 py-2">Payment Status</th>
+          </tr>
+        </thead>
+        <tbody id="registrationsTable">
+          <% if (!registrations || registrations.length === 0) { %>
+            <tr>
+              <td colspan="5" class="px-4 py-6 text-center text-gray-400">No registrations yet.</td>
+            </tr>
+          <% } else { %>
+            <% registrations.forEach((reg, index) => { %>
+              <tr class="hover:bg-gray-50 registration-row" 
+                  data-event="<%= reg.eventId?.name.toLowerCase() %>" 
+                  data-department="<%= reg.eventId?.department %>">
+                <td class="px-4 py-2"><%= index + 1 %></td>
+                <td class="px-4 py-2"><%= reg.eventId?.name || '-' %></td>
+                <td class="px-4 py-2"><%= reg.userId?.name || '-' %></td>
+                <td class="px-4 py-2 space-y-1">
+                  <% reg.participants.forEach((p, i) => { %>
+                    <p><%= i + 1 %>. <%= p.name %> | <%= p.email %> | <%= p.mobNo %></p>
+                  <% }) %>
+                </td>
+                <td class="px-4 py-2">
+                  <% if (reg.paymentStatus === 'paid') { %>
+                    <span class="text-green-600 font-semibold">Paid</span>
+                  <% } else { %>
+                    <span class="text-red-600 font-semibold">Pending</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<script>
+  const searchInput = document.getElementById('searchInput');
+  const departmentFilter = document.getElementById('departmentFilter');
+  const eventFilter = document.getElementById('eventFilter');
+  const rows = document.querySelectorAll('.registration-row');
+
+  function filterRegistrations() {
+    const searchText = searchInput.value.toLowerCase();
+    const selectedDept = departmentFilter.value;
+    const selectedEvent = eventFilter.value.toLowerCase();
+
+    rows.forEach(row => {
+      const rowEvent = row.dataset.event;
+      const rowDept = row.dataset.department;
+      const matchesSearch = rowEvent.includes(searchText) || row.innerText.toLowerCase().includes(searchText);
+      const matchesDept = !selectedDept || rowDept === selectedDept;
+      const matchesEvent = !selectedEvent || rowEvent === selectedEvent;
+
+      if (matchesSearch && matchesDept && matchesEvent) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+
+  searchInput.addEventListener('input', filterRegistrations);
+  departmentFilter.addEventListener('change', filterRegistrations);
+  eventFilter.addEventListener('change', filterRegistrations);
+</script>

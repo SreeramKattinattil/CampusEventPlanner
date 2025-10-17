@@ -392,18 +392,17 @@ router.get("/myEvents", isUser, async (req, res) => {
 });
 
 // ============================
+/// ============================
 // Upcoming Events / Reminders
-// Upcoming Events / Reminders
+// ============================
 router.get("/reminders", isUser, async (req, res) => {
   try {
     const userId = req.session.user._id;
-
     const registrations = await Registration.find({ userId })
       .populate("eventId")
       .lean();
 
     const now = new Date();
-
     const upcomingEvents = registrations
       .filter((reg) => reg.eventId && reg.eventId.date)
       .map((reg) => {
@@ -415,7 +414,6 @@ router.get("/reminders", isUser, async (req, res) => {
 
         let reminderMessages = [];
 
-        // Base reminder at registration
         if (diffDays > 1) {
           reminderMessages.push(
             `Your event "${event.name}" is in ${diffDays} days!`
@@ -446,6 +444,29 @@ router.get("/reminders", isUser, async (req, res) => {
   } catch (err) {
     console.error("Error fetching reminders:", err);
     res.status(500).send("Failed to fetch reminders");
+  }
+});
+
+/* ===========================================================
+   MEMORIES PAGE (User view)
+=========================================================== */
+const Media = require("../models/Media");
+// GET: Memories Page
+router.get("/memories", isUser, async (req, res) => {
+  try {
+    const mediaList = await Media.find()
+      .populate("event", "name")
+      .populate("coordinator", "name")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.render("user/memories", {
+      user: req.session.user,
+      mediaList,
+    });
+  } catch (err) {
+    console.error("Error loading memories:", err);
+    res.status(500).send("Failed to load memories");
   }
 });
 

@@ -8,7 +8,7 @@ const Event = require("../models/Event");
 const EventCoordinator = require("../models/eventCoordinator");
 const Registration = require("../models/Registration");
 const Transaction = require("../models/Transaction");
-
+const Media = require("../models/Media");
 // =====================
 // Middleware: Protect Event Coordinator Routes
 // =====================
@@ -373,6 +373,67 @@ router.post("/markPaid/:registrationId", async (req, res) => {
     console.error(err);
     res.status(500).send("Something went wrong");
   }
+}); // =====================
+// GET: Add Media Page
+// =====================
+router.get("/addMedia", isEventCoordinator, async (req, res) => {
+  try {
+    const coordinator = req.session.user;
+
+    const events = await Event.find({
+      coordinator: coordinator._id,
+      status: "approved",
+    }).lean();
+    const mediaList = await Media.find({ coordinator: coordinator._id })
+      .populate("event", "name")
+      .populate("coordinator", "name")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.render("eventCoordinator/addMedia", {
+      coordinator,
+      events,
+      mediaList,
+      success: req.query.success || null,
+    });
+  } catch (err) {
+    console.error("Error loading addMedia page:", err);
+    res.status(500).send("Error loading Add Media page");
+  }
 });
+
+// =====================
+// POST: Upload Media
+// =====================
+router.post(
+  "/addMedia",
+  isEventCoordinator,
+  upload.array("mediaFiles", 10),
+  async (req, res) => {
+    try {
+      const { eventId, caption } = req.body;
+      if (!req.files || req.files.length === 0)
+        return res.redirect("/event-coordinator/addMedia");
+
+      const files = req.files.map((file) => ({
+        mediaUrl: "/uploads/" + file.filename,
+        mediaType: file.mimetype.startsWith("image") ? "image" : "video",
+      }));
+
+      const newMedia = new Media({
+        event: eventId,
+        coordinator: req.session.user._id,
+        caption,
+        files,
+      });
+
+      await newMedia.save();
+      res.redirect("/event-coordinator/addMedia?success=true");
+    } catch (err) {
+      console.error("Error uploading media:", err);
+      res.status(500).send("Server Error");
+    }
+  }
+);
 
 module.exports = router;

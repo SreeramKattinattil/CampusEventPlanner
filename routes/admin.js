@@ -7,7 +7,7 @@ const Event = require("../models/Event");
 const Registration = require("../models/Registration");
 const Transaction = require("../models/Transaction");
 const EventCoordinator = require("../models/eventCoordinator");
-
+const Media = require("../models/Media");
 // ================= Middleware =================
 function isAdmin(req, res, next) {
   if (req.session.user && req.session.user.role === "admin") return next();
@@ -42,12 +42,19 @@ router.get("/adminDashboard", isAdmin, async (req, res) => {
 
     const transactions = await Transaction.find().sort({ createdAt: -1 });
 
+    // Fetch media for admin dashboard
+    const mediaList = await Media.find()
+      .populate("event", "name")
+      .populate("coordinator", "name")
+      .lean();
+
     res.render("admin/adminDashboard", {
       admin: req.session.user,
       stats,
       events,
       feedbacks,
       transactions,
+      mediaList, // ✅ now it’s passed
     });
   } catch (err) {
     console.error("Dashboard Error:", err);
@@ -271,6 +278,214 @@ router.post("/deleteEventCoordinators", isAdmin, async (req, res) => {
   } catch (err) {
     console.error("Delete Event Coordinators Error:", err);
     res.status(500).send("Error deleting event coordinators");
+  }
+});
+
+// Memories / Media page
+router.get("/memories", async (req, res) => {
+  try {
+    const admin = req.session.admin;
+
+    const mediaList = await Media.find()
+      .populate("event", "name")
+      .populate("coordinator", "name")
+      .lean();
+
+    res.render("admin/memories", { admin, mediaList });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
+});
+
+// ================= View Registrations of an Event =================
+// ================= Event Registrations =================
+// GET registrations of a specific event
+router.get("/eventRegistrations/:eventId", isAdmin, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+
+    const event = await Event.findById(eventId).lean();
+    if (!event) return res.status(404).send("Event not found");
+
+    const registrations = await Registration.find({ eventId })
+      .populate("userId", "name email")
+      .lean();
+
+    const { stats, events } = await getAdminHeaderData();
+
+    res.render("admin/eventRegistrations", {
+      admin: req.session.user,
+      stats,
+      events,
+      event,
+      registrations,
+    });
+  } catch (err) {
+    console.error("Event Registrations Error:", err);
+    res.status(500).send("Error fetching registrations");
+  }
+});
+// Admin Event Registrations page
+// ================= Admin Event Registrations with Search & Filters =================
+router.get("/eventRegistrations", isAdmin, async (req, res) => {
+  try {
+    const { search, eventId, department } = req.query;
+
+    // Build query dynamically
+    let query = {};
+
+    // If filtering by specific event
+    if (eventId && eventId !== "all") query.eventId = eventId;
+
+    // If searching by user name or email
+    if (search) {
+      query.$or = [
+        { "participants.name": { $regex: search, $options: "i" } },
+        { "participants.email": { $regex: search, $options: "i" } },
+        { "userId.name": { $regex: search, $options: "i" } },
+        { "userId.email": { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // Fetch all registrations matching the query
+    let registrations = await Registration.find(query)
+      .populate("eventId") // event details
+      .populate("userId"); // user details
+
+    // If filtering by department
+    if (department && department !== "all") {
+      registrations = registrations.filter(
+        (reg) => reg.eventId?.department === department
+      );
+    }
+
+    // Fetch events & stats for dropdowns and sidebar
+    const events = await Event.find().sort({ date: 1 });
+    const stats = {
+      totalUsers: await User.countDocuments(),
+      totalFaculty: await Faculty.countDocuments(),
+      totalEvents: await Event.countDocuments(),
+      approvedEvents: await Event.countDocuments({ status: "approved" }),
+    };
+
+    res.render("admin/eventRegistrations", {
+      admin: req.session.user,
+      stats,
+      events,
+      registrations,
+      search: search || "",
+      selectedEvent: eventId || "all",
+      selectedDept: department || "all",
+    });
+  } catch (err) {
+    console.error("Event Registrations Error:", err);
+    res.status(500).send("Server Error");
+  }
+});
+// ================= Admin Transactions with Filters =================
+router.get("/transactions", isAdmin, async (req, res) => {
+  try {
+    const { event: eventId, department, status, paymentMethod } = req.query;
+
+    // Fetch all events for filter dropdown
+    const events = await Event.find().lean();
+    const eventIds = events.map((e) => e._id);
+
+    let query = { event: { $in: eventIds } };
+
+    if (eventId && eventId !== "all") query.event = eventId;
+    if (department && department !== "all") query.department = department;
+    if (status && status !== "all") query.status = status;
+    if (paymentMethod && paymentMethod !== "all")
+      query.paymentMethod = paymentMethod;
+
+    // Fetch transactions
+    const transactions = await Transaction.find(query)
+      .populate("event", "name department fee")
+      .populate("user", "name email mobile")
+      .populate("coordinator", "name")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Compute total
+    const totalAmount = transactions.reduce(
+      (sum, t) => sum + (t.amount || 0),
+      0
+    );
+
+    // Fetch stats for header/sidebar
+    const { stats } = await getAdminHeaderData();
+
+    res.render("admin/transactions", {
+      admin: req.session.user,
+      stats,
+      events,
+      transactions,
+      filters: {
+        event: eventId || "all",
+        department: department || "all",
+        status: status || "all",
+        paymentMethod: paymentMethod || "all",
+      },
+      totalAmount,
+    });
+  } catch (err) {
+    console.error("Transactions Error:", err);
+    res.status(500).send("Error fetching transactions");
+  }
+});
+
+// ================= POST Transactions Filter =================
+router.post("/transactions", isAdmin, async (req, res) => {
+  try {
+    const { eventId, department } = req.body; // From form submission
+
+    // Build base query
+    let query = {};
+    if (eventId && eventId !== "all") query.eventId = eventId;
+
+    // Fetch transactions
+    let transactions = await Transaction.find(query)
+      .populate("eventId") // event details
+      .populate("userId"); // user details
+
+    // Filter by department if provided
+    if (department && department !== "all") {
+      transactions = transactions.filter(
+        (tx) => tx.eventId?.department === department
+      );
+    }
+
+    // Calculate total amount
+    const totalAmount = transactions.reduce(
+      (sum, tx) => sum + (tx.amount || 0),
+      0
+    );
+
+    // Fetch events for dropdown
+    const events = await Event.find().sort({ date: 1 });
+
+    // Fetch stats for sidebar
+    const stats = {
+      totalUsers: await User.countDocuments(),
+      totalFaculty: await Faculty.countDocuments(),
+      totalEvents: await Event.countDocuments(),
+      approvedEvents: await Event.countDocuments({ status: "approved" }),
+    };
+
+    res.render("admin/transactions", {
+      admin: req.session.user,
+      stats,
+      events,
+      transactions,
+      selectedEvent: eventId || "all",
+      selectedDept: department || "all",
+      totalAmount,
+    });
+  } catch (err) {
+    console.error("Transactions Filter POST Error:", err);
+    res.status(500).send("Server Error");
   }
 });
 

@@ -1,0 +1,98 @@
+<%- include('../partials/adminHeader', { admin, stats, events }) %>
+
+<main class="ml-60 p-6 bg-gray-50 min-h-screen">
+  <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-md p-6">
+
+    <h2 class="text-3xl font-semibold mb-4 text-gray-800">Transactions</h2>
+
+  <form method="GET" class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+  <select name="event" class="border px-3 py-2 rounded">
+    <option value="all">All Events</option>
+    <% events.forEach(e => { %>
+      <option value="<%= e._id %>" <%= filters.event === String(e._id) ? 'selected' : '' %>><%= e.name %></option>
+    <% }) %>
+  </select>
+
+  <select name="department" class="border px-3 py-2 rounded">
+    <option value="all">All Departments</option>
+    <% const departments = [...new Set(events.map(e => e.department))]; %>
+    <% departments.forEach(dep => { %>
+      <option value="<%= dep %>" <%= filters.department === dep ? 'selected' : '' %>><%= dep %></option>
+    <% }) %>
+  </select>
+
+  <select name="status" class="border px-3 py-2 rounded">
+    <option value="all" <%= filters.status === 'all' ? 'selected' : '' %>>All Statuses</option>
+    <option value="success" <%= filters.status === 'success' ? 'selected' : '' %>>Success</option>
+    <option value="pending" <%= filters.status === 'pending' ? 'selected' : '' %>>Pending</option>
+    <option value="failed" <%= filters.status === 'failed' ? 'selected' : '' %>>Failed</option>
+  </select>
+
+  <select name="paymentMethod" class="border px-3 py-2 rounded">
+  <option value="all" <%= filters.paymentMethod === 'all' ? 'selected' : '' %>>All Methods</option>
+  <option value="online" <%= filters.paymentMethod === 'online' ? 'selected' : '' %>>Online</option>
+  <option value="offline" <%= filters.paymentMethod === 'offline' ? 'selected' : '' %>>Offline</option>
+</select>
+
+
+  <div class="flex items-center">
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Filter</button>
+  </div>
+</form>
+
+
+    <!-- Table -->
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b border-gray-200">
+            <th>#</th>
+            <th>Event</th>
+            <th>Department</th>
+            <th>Coordinator</th>
+            <th>Student</th>
+            <th>Amount</th>
+            <th>Payment Method</th>
+            <th>Status</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (!transactions || transactions.length === 0) { %>
+            <tr>
+              <td colspan="9" class="text-center text-gray-400 py-4">No transactions found.</td>
+            </tr>
+          <% } else { %>
+            <% transactions.forEach((tx, idx) => { %>
+              <tr class="hover:bg-gray-50 border-b border-gray-100">
+                <td class="px-4 py-2"><%= idx + 1 %></td>
+                <td class="px-4 py-2"><%= tx.event ? tx.event.name : '-' %></td>
+                <td class="px-4 py-2"><%= tx.event ? tx.event.department : '-' %></td>
+                <td class="px-4 py-2"><%= tx.coordinator ? tx.coordinator.name : '-' %></td>
+                <td class="px-4 py-2">
+                  <%= tx.user ? tx.user.name : '-' %> <br>
+                  <span class="text-gray-500 text-sm"><%= tx.user ? tx.user.email : '-' %></span>
+                  <br>
+                  <span class="text-gray-500 text-sm"><%= tx.user ? tx.user.mobile : '-' %></span>
+                </td>
+                <td class="px-4 py-2 font-semibold">₹<%= tx.amount %></td>
+                <td class="px-4 py-2"><%= tx.paymentMethod %></td>
+                <td class="px-4 py-2 font-semibold <%= tx.status === 'success' ? 'text-green-600' : tx.status === 'pending' ? 'text-yellow-600' : 'text-red-600' %>">
+                  <%= tx.status %>
+                </td>
+                <td class="px-4 py-2 text-gray-500 text-sm"><%= new Date(tx.createdAt).toLocaleString() %></td>
+              </tr>
+            <% }) %>
+            <!-- Total Amount -->
+            <tr class="bg-gray-100 font-semibold">
+              <td colspan="5" class="px-4 py-3 text-right">Total</td>
+              <td class="px-4 py-3">₹<%= totalAmount %></td>
+              <td colspan="3"></td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</main>
